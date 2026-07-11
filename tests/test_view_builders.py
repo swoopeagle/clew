@@ -92,9 +92,13 @@ def test_build_org_profile_modal_prefills_existing_values():
     modal = build_org_profile_modal(
         {"mission": "Serve local youth", "grant_size_min": 5000}
     )
-    mission_block = next(b for b in modal["blocks"] if b["block_id"] == "mission")
+    mission_block = next(
+        b for b in modal["blocks"] if b.get("block_id") == "mission"
+    )
     assert mission_block["element"]["initial_value"] == "Serve local youth"
-    min_block = next(b for b in modal["blocks"] if b["block_id"] == "grant_size_min")
+    min_block = next(
+        b for b in modal["blocks"] if b.get("block_id") == "grant_size_min"
+    )
     assert min_block["element"]["initial_value"] == "5000"
 
 

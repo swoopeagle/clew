@@ -1,11 +1,13 @@
+from datetime import date
+
 STAGE_LABELS = {
-    "qualified": "Qualified — awaiting your review",
-    "approved": "Approved — not yet applied",
-    "applied": "Applied — drafting/in progress",
-    "submitted": "Submitted — awaiting funder decision",
-    "awarded": "Awarded \U0001f389",
-    "declined": "Declined",
-    "passed": "Passed",
+    "qualified": ":mag: Qualified — awaiting your review",
+    "approved": ":white_check_mark: Approved — up next",
+    "applied": ":writing_hand: Applied — in progress",
+    "submitted": ":mailbox_with_mail: Submitted — awaiting the funder",
+    "awarded": ":trophy: Awarded \U0001f389",
+    "declined": ":x: Declined",
+    "passed": ":fast_forward: Passed",
 }
 
 # (stage, button label, action_id) — one forward transition per actionable stage.
@@ -17,6 +19,13 @@ ADVANCE_ACTIONS = {
         ("Mark Declined", "clew_mark_declined"),
     ],
 }
+
+
+def _due_soon(iso: str | None) -> bool:
+    try:
+        return 0 <= (date.fromisoformat(iso) - date.today()).days <= 7
+    except (ValueError, TypeError):
+        return False
 
 
 def build_board_blocks(grouped: dict[str, list[dict]]) -> list[dict]:
@@ -52,7 +61,8 @@ def build_board_blocks(grouped: dict[str, list[dict]]) -> list[dict]:
         for row in rows:
             line = f"• {row['name']}"
             if stage == "approved" and row.get("deadline_date"):
-                line += f"  _(due {row['deadline_date']})_"
+                alarm = "⏰ " if _due_soon(row["deadline_date"]) else ""
+                line += f"  {alarm}_(due {row['deadline_date']})_"
             if stage == "awarded" and row.get("report_due_date"):
                 report_status = (
                     "reported"
@@ -119,7 +129,10 @@ def build_board_blocks(grouped: dict[str, list[dict]]) -> list[dict]:
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": "No prospects yet — click *Find Grants* above to get started.",
+                        "text": (
+                            ":yarn: No prospects yet — click *Find Grants* "
+                            "above and Clew will pull the first thread."
+                        ),
                     }
                 ],
             }
