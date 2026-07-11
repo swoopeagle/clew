@@ -8,6 +8,7 @@ from slack_sdk.web.async_client import AsyncWebClient
 
 from agent import AgentDeps, run_agent
 from agent.org_context import prepend_org_profile
+from listeners.actions.origin import resolve_origin
 from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
 from storage import get_prospect
@@ -42,10 +43,10 @@ async def handle_draft_application(
         user_id = body["user"]["id"]
         team_id = context.team_id or "default"
 
-        dm = await client.conversations_open(users=user_id)
-        channel_id = dm["channel"]["id"]
+        channel_id, origin_thread = await resolve_origin(client, body)
         initial = await client.chat_postMessage(
             channel=channel_id,
+            thread_ts=origin_thread,
             text=f":writing_hand: Drafting an application outline for {prospect['name']}…",
         )
         thread_ts = initial["ts"]

@@ -7,6 +7,7 @@ from slack_sdk.web.async_client import AsyncWebClient
 
 from agent import AgentDeps, run_agent
 from agent.org_context import prepend_org_profile
+from listeners.actions.origin import resolve_origin
 from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
 from listeners.views.setup_prompt_builder import build_profile_setup_blocks
@@ -33,14 +34,16 @@ async def handle_find_grants(
         user_id = body["user"]["id"]
         team_id = context.team_id or "default"
 
-        dm = await client.conversations_open(users=user_id)
-        channel_id = dm["channel"]["id"]
+        # Answer where the button was clicked (channel thread), falling
+        # back to the user's DM for App Home clicks.
+        channel_id, origin_thread = await resolve_origin(client, body)
 
         # Without a profile the agent can only ask for one — skip the run
         # and offer the one-click setup path instead.
         if not await asyncio.to_thread(get_org_profile, team_id):
             await client.chat_postMessage(
                 channel=channel_id,
+                thread_ts=origin_thread,
                 text="Set up your org profile first so Clew can screen grants for fit.",
                 blocks=build_profile_setup_blocks(),
             )
@@ -48,9 +51,11 @@ async def handle_find_grants(
 
         initial = await client.chat_postMessage(
             channel=channel_id,
+            thread_ts=origin_thread,
             text="Looking for grants that fit your org profile...",
         )
-        thread_ts = initial["ts"]
+        progress_ts = initial["ts"]
+        thread_ts = origin_thread or progress_ts
 
         deps = AgentDeps(
             client=client,
@@ -65,7 +70,9 @@ async def handle_find_grants(
         async def _tool_status(tool_name: str):
             label = status_for(tool_name)
             if label:
-                await client.chat_update(channel=channel_id, ts=thread_ts, text=label)
+                await client.chat_update(
+                    channel=channel_id, ts=progress_ts, text=label
+                )
 
         prompt_text = await prepend_org_profile(FIND_GRANTS_PROMPT, team_id)
         response_text, _ = await run_agent(

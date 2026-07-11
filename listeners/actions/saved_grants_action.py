@@ -5,6 +5,7 @@ from slack_bolt import Ack
 from slack_bolt.context.async_context import AsyncBoltContext
 from slack_sdk.web.async_client import AsyncWebClient
 
+from listeners.actions.origin import resolve_origin
 from listeners.views.app_home_builder import _pipeline_summary
 from listeners.views.board_builder import build_board_blocks
 from listeners.views.home_refresh import _get_workspace_url
@@ -37,9 +38,10 @@ async def handle_show_saved(
             build_board_blocks(grouped, workspace_url=await _get_workspace_url(client))
         )
 
-        dm = await client.conversations_open(users=body["user"]["id"])
+        channel_id, thread_ts = await resolve_origin(client, body)
         await client.chat_postMessage(
-            channel=dm["channel"]["id"],
+            channel=channel_id,
+            thread_ts=thread_ts,
             text="Your saved grants",
             blocks=blocks,
         )
