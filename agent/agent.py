@@ -6,6 +6,7 @@ from claude_agent_sdk import (
     ClaudeSDKClient,
     ResultMessage,
     TextBlock,
+    ToolUseBlock,
     create_sdk_mcp_server,
 )
 from claude_agent_sdk.types import McpHttpServerConfig
@@ -152,6 +153,7 @@ async def run_agent(
     text: str,
     session_id: str | None = None,
     deps: AgentDeps | None = None,
+    on_tool_use=None,
 ) -> tuple[str, str | None]:
     """Run the agent with the given text and optional session for context.
 
@@ -159,6 +161,8 @@ async def run_agent(
         text: The user's message text.
         session_id: Optional session ID to resume a previous conversation.
         deps: Optional dependencies for tools that need Slack API access.
+        on_tool_use: Optional async callback invoked with each tool name as
+            the agent starts using it (for live progress in the UI).
 
     Returns:
         A tuple of (response_text, new_session_id).
@@ -200,6 +204,11 @@ async def run_agent(
                 for block in message.content:
                     if isinstance(block, TextBlock):
                         response_parts.append(block.text)
+                    elif isinstance(block, ToolUseBlock) and on_tool_use:
+                        try:
+                            await on_tool_use(block.name)
+                        except Exception:
+                            pass  # progress display must never break the run
             if isinstance(message, ResultMessage):
                 new_session_id = message.session_id
 

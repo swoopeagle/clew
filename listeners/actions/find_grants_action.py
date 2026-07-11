@@ -7,6 +7,7 @@ from slack_sdk.web.async_client import AsyncWebClient
 
 from agent import AgentDeps, run_agent
 from agent.org_context import prepend_org_profile
+from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
 from listeners.views.setup_prompt_builder import build_profile_setup_blocks
 from storage import get_org_profile
@@ -57,8 +58,17 @@ async def handle_find_grants(
             user_token=context.user_token,
             team_id=team_id,
         )
+        async def _tool_status(tool_name: str):
+            label = status_for(tool_name)
+            if label:
+                await client.chat_update(
+                    channel=channel_id, ts=thread_ts, text=label
+                )
+
         prompt_text = await prepend_org_profile(FIND_GRANTS_PROMPT, team_id)
-        response_text, _ = await run_agent(prompt_text, deps=deps)
+        response_text, _ = await run_agent(
+            prompt_text, deps=deps, on_tool_use=_tool_status
+        )
 
         if response_text:
             await client.chat_postMessage(
