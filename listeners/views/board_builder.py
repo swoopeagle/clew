@@ -28,7 +28,19 @@ def _due_soon(iso: str | None) -> bool:
         return False
 
 
-def build_board_blocks(grouped: dict[str, list[dict]]) -> list[dict]:
+def _row_name(row: dict, workspace_url: str | None) -> str:
+    """The prospect name, linked to its original shortlist card when we
+    know where that message lives."""
+    channel, ts = row.get("slack_channel_id"), row.get("slack_message_ts")
+    if workspace_url and channel and ts:
+        permalink = f"{workspace_url.rstrip('/')}/archives/{channel}/p{str(ts).replace('.', '')}"
+        return f"<{permalink}|{row['name']}>"
+    return row["name"]
+
+
+def build_board_blocks(
+    grouped: dict[str, list[dict]], workspace_url: str | None = None
+) -> list[dict]:
     """Render the submission status board: every prospect grouped by stage,
     with a forward-transition button where one applies. This is the same
     `prospects` table as the shortlist cards — just a different view."""
@@ -59,7 +71,7 @@ def build_board_blocks(grouped: dict[str, list[dict]]) -> list[dict]:
         )
 
         for row in rows:
-            line = f"• {row['name']}"
+            line = f"• {_row_name(row, workspace_url)}"
             if stage == "approved" and row.get("deadline_date"):
                 alarm = "⏰ " if _due_soon(row["deadline_date"]) else ""
                 line += f"  {alarm}_(due {row['deadline_date']})_"

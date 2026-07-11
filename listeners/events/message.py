@@ -80,6 +80,7 @@ async def handle_message(
             team_id=team_id,
             app_id=body.get("api_app_id"),
         )
+
         async def _tool_status(tool_name: str):
             label = status_for(tool_name)
             if label:

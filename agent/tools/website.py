@@ -82,9 +82,7 @@ async def fetch_org_website_tool(args):
         url = "https://" + url
     if urlparse(url).scheme not in ("http", "https"):
         return {
-            "content": [
-                {"type": "text", "text": "Only http(s) URLs can be fetched."}
-            ]
+            "content": [{"type": "text", "text": "Only http(s) URLs can be fetched."}]
         }
 
     try:
@@ -104,11 +102,7 @@ async def fetch_org_website_tool(args):
                 raw = await resp.content.read(MAX_BYTES)
                 html = raw.decode(resp.charset or "utf-8", errors="replace")
     except Exception as e:
-        return {
-            "content": [
-                {"type": "text", "text": f"Could not fetch {url} ({e})."}
-            ]
-        }
+        return {"content": [{"type": "text", "text": f"Could not fetch {url} ({e})."}]}
 
     title, description, text = _extract_text(html)
     summary_bits = []

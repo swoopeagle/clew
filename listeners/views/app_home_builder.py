@@ -89,6 +89,7 @@ def build_app_home_view(
     board: dict[str, list[dict]] | None = None,
     install_url: str | None = None,
     is_connected: bool = False,
+    workspace_url: str | None = None,
 ) -> dict:
     """Build the App Home Block Kit view: hero, org profile summary (or
     onboarding steps), action buttons, pipeline summary, and the grant board.
@@ -200,7 +201,7 @@ def build_app_home_view(
             }
         )
 
-    blocks.extend(build_board_blocks(board))
+    blocks.extend(build_board_blocks(board, workspace_url=workspace_url))
 
     blocks.append({"type": "divider"})
     blocks.append(

@@ -8,6 +8,21 @@ from listeners.views.app_home_builder import build_app_home_view
 from storage import get_org_profile, get_prospects_grouped_by_stage
 
 
+_workspace_url: str | None = None
+
+
+async def _get_workspace_url(client: AsyncWebClient) -> str | None:
+    """Workspace base URL (for message permalinks), cached after first call."""
+    global _workspace_url
+    if _workspace_url is None:
+        try:
+            auth = await client.auth_test()
+            _workspace_url = auth.get("url") or ""
+        except Exception:
+            _workspace_url = ""
+    return _workspace_url or None
+
+
 async def publish_home(
     client: AsyncWebClient, user_id: str, team_id: str, user_token: str | None = None
 ) -> None:
@@ -31,5 +46,6 @@ async def publish_home(
         board=board,
         install_url=install_url,
         is_connected=is_connected,
+        workspace_url=await _get_workspace_url(client),
     )
     await client.views_publish(user_id=user_id, view=view)

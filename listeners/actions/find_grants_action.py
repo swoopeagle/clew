@@ -58,12 +58,11 @@ async def handle_find_grants(
             user_token=context.user_token,
             team_id=team_id,
         )
+
         async def _tool_status(tool_name: str):
             label = status_for(tool_name)
             if label:
-                await client.chat_update(
-                    channel=channel_id, ts=thread_ts, text=label
-                )
+                await client.chat_update(channel=channel_id, ts=thread_ts, text=label)
 
         prompt_text = await prepend_org_profile(FIND_GRANTS_PROMPT, team_id)
         response_text, _ = await run_agent(

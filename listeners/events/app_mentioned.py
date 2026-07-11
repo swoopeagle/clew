@@ -37,8 +37,11 @@ async def handle_app_mentioned(
         cleaned_text = re.sub(r"<@[A-Z0-9]+>", "", text).strip()
 
         if not cleaned_text:
+            from listeners.views.welcome_builder import build_welcome_blocks
+
             await say(
-                text="Hey there! How can I help you? Ask me anything and I'll do my best.",
+                text="Hi, I'm Clew — grant prospecting for small nonprofit teams.",
+                blocks=build_welcome_blocks(),
                 thread_ts=thread_ts,
             )
             return
@@ -70,6 +73,7 @@ async def handle_app_mentioned(
             team_id=team_id,
             app_id=body.get("api_app_id"),
         )
+
         async def _tool_status(tool_name: str):
             label = status_for(tool_name)
             if label:
