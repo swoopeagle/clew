@@ -13,11 +13,14 @@ from slack_sdk.oauth.installation_store import FileInstallationStore
 from slack_sdk.oauth.state_store import FileOAuthStateStore
 
 from listeners import register_listeners
+from storage import init_db
 
 load_dotenv(dotenv_path=".env", override=False)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+init_db()
 
 # ---------------------------------------------------------------------------
 # OAuth settings

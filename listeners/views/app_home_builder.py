@@ -1,11 +1,20 @@
+from listeners.views.board_builder import build_board_blocks
+
+
 def build_app_home_view(
-    install_url: str | None = None, is_connected: bool = False
+    org_profile: dict | None = None,
+    board: dict[str, list[dict]] | None = None,
+    install_url: str | None = None,
+    is_connected: bool = False,
 ) -> dict:
-    """Build the App Home Block Kit view.
+    """Build the App Home Block Kit view: mission header, org profile status,
+    Find Grants entry point, and the live grant board underneath.
 
     Args:
+        org_profile: The org's saved profile row, or None if not set up yet.
+        board: Prospects grouped by stage (see storage.get_prospects_grouped_by_stage).
         install_url: OAuth install URL. When provided, the user has not
-            connected and will see a link to install.
+            connected and will see a link to install (unlocks Real-Time Search).
         is_connected: When ``True``, the user is connected and the MCP
             status section shows as connected.
     """
@@ -14,7 +23,7 @@ def build_app_home_view(
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": "Hey there :wave: I'm your Slack assistant.",
+                "text": ":thread: Clew — grant prospecting for small teams",
             },
         },
         {
@@ -22,32 +31,66 @@ def build_app_home_view(
             "text": {
                 "type": "mrkdwn",
                 "text": (
-                    "I'm here to help! You can ask me questions, have a conversation, "
-                    "or ask me to do things in Slack.\n\n"
-                    "Send me a *direct message* or *mention me in a channel* to get started."
+                    "Clew finds real, sourced grant prospects for your org, screens them for fit, "
+                    "and posts a shortlist for you to approve or pass on."
                 ),
             },
         },
-        {"type": "divider"},
     ]
 
-    if is_connected:
+    if org_profile:
+        summary_bits = [f"*Mission:* {org_profile.get('mission') or 'n/a'}"]
+        if org_profile.get("program_areas"):
+            summary_bits.append(f"*Program areas:* {org_profile['program_areas']}")
+        blocks.append(
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "\n".join(summary_bits)},
+            }
+        )
+        profile_button_text = "Edit Org Profile"
+    else:
         blocks.append(
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "\U0001f7e2 *Slack MCP Server is connected.*",
+                    "text": ":large_yellow_circle: *No org profile set up yet.*",
                 },
             }
         )
+        profile_button_text = "Set Up Org Profile"
+
+    blocks.append(
+        {
+            "type": "actions",
+            "block_id": "clew_home_actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": profile_button_text},
+                    "action_id": "clew_open_org_profile",
+                },
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "text": {"type": "plain_text", "text": "Find Grants"},
+                    "action_id": "clew_find_grants",
+                },
+            ],
+        }
+    )
+
+    blocks.append({"type": "divider"})
+
+    if is_connected:
         blocks.append(
             {
                 "type": "context",
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": "The agent can search messages, read channels, and more.",
+                        "text": "\U0001f7e2 Real-time workspace search connected (warm-path detection enabled).",
                     }
                 ],
             }
@@ -55,47 +98,16 @@ def build_app_home_view(
     elif install_url:
         blocks.append(
             {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"\U0001f534 *Slack MCP Server is disconnected.* <{install_url}|Connect the Slack MCP Server.>",
-                },
-            }
-        )
-        blocks.append(
-            {
                 "type": "context",
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": "The Slack MCP Server enables the agent to search messages, read channels, and more.",
-                    }
-                ],
-            }
-        )
-    else:
-        blocks.append(
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "\U0001f534 *Slack MCP Server is disconnected.* <https://github.com/slack-samples/bolt-python-starter-agent/blob/main/claude-agent-sdk/README.md#slack-mcp-server|Learn how to enable the Slack MCP Server.>",
-                },
-            }
-        )
-        blocks.append(
-            {
-                "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "The Slack MCP Server enables the agent to search messages, read channels, and more.",
+                        "text": f"⚪ <{install_url}|Connect workspace search> to enable warm-path detection.",
                     }
                 ],
             }
         )
 
-    return {
-        "type": "home",
-        "blocks": blocks,
-    }
+    blocks.extend(build_board_blocks(board or {}))
+
+    return {"type": "home", "blocks": blocks}

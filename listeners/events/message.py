@@ -7,6 +7,7 @@ from slack_bolt.context.set_status.async_set_status import AsyncSetStatus
 from slack_sdk.web.async_client import AsyncWebClient
 
 from agent import AgentDeps, run_agent
+from agent.org_context import prepend_org_profile
 from thread_context import session_store
 from listeners.views.feedback_builder import build_feedback_blocks
 
@@ -63,6 +64,7 @@ async def handle_message(
 
         # Run the agent with deps for tool access
         user_id = context.user_id
+        team_id = context.team_id or "default"
         deps = AgentDeps(
             client=client,
             user_id=user_id,
@@ -70,9 +72,11 @@ async def handle_message(
             thread_ts=thread_ts,
             message_ts=event["ts"],
             user_token=context.user_token,
+            team_id=team_id,
         )
+        prompt_text = await prepend_org_profile(text, team_id)
         response_text, new_session_id = await run_agent(
-            text, session_id=existing_session_id, deps=deps
+            prompt_text, session_id=existing_session_id, deps=deps
         )
 
         # Stream response in thread with feedback buttons

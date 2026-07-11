@@ -4,8 +4,17 @@
   },
   "features": {
     "agent_view": {
-      "agent_description": "Hi, I am an agent built using Bolt for Python. I am here to help you out!",
-      "suggested_prompts": []
+      "agent_description": "I find real, sourced grant and funder prospects that fit your organization, screen them for fit, and hand your team a shortlist to approve or pass on — built for small nonprofit teams without dedicated grant-research staff.",
+      "suggested_prompts": [
+        {
+          "title": "Find grants for us",
+          "message": "Find grants and foundations that fit our org profile."
+        },
+        {
+          "title": "Set up our org profile",
+          "message": "Help me set up our org profile so you can screen grants for fit."
+        }
+      ]
     },
     "app_home": {
       "home_tab_enabled": true,

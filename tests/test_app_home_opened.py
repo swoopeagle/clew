@@ -17,6 +17,8 @@ class TestAppHomeOpened:
         self.fake_client.assistant_threads_setSuggestedPrompts = AsyncMock()
         self.fake_context = Mock(AsyncBoltContext)
         self.fake_context.user_id = "U123"
+        self.fake_context.team_id = "T123"
+        self.fake_context.user_token = None
 
     @pytest.mark.asyncio
     async def test_publishes_home_view_when_tab_is_home(self):

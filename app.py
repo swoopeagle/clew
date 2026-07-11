@@ -8,10 +8,13 @@ from slack_bolt.async_app import AsyncApp
 from slack_sdk.web.async_client import AsyncWebClient
 
 from listeners import register_listeners
+from storage import init_db
 
 load_dotenv(dotenv_path=".env", override=False)
 
 logging.basicConfig(level=logging.DEBUG)
+
+init_db()
 
 app = AsyncApp(
     token=os.environ.get("SLACK_BOT_TOKEN"),
