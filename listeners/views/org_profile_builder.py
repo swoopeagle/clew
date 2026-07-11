@@ -86,6 +86,66 @@ def build_org_profile_modal(existing: dict | None = None) -> dict:
     if other_areas:
         areas_other["initial_value"] = ", ".join(other_areas)
 
+    # Offer AI drafting only on first-time setup — the edit modal stays clean.
+    ai_draft_blocks = []
+    if not _val("mission"):
+        ai_draft_blocks = [
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": (
+                            ":sparkles: *Let AI draft this for you* — add your "
+                            "website and/or a few notes, then click Draft. "
+                            "You'll review everything before saving."
+                        ),
+                    }
+                ],
+            },
+            {
+                "type": "input",
+                "block_id": "ai_website",
+                "optional": True,
+                "label": {"type": "plain_text", "text": "Your website"},
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "value",
+                    "placeholder": {"type": "plain_text", "text": "yourorg.org"},
+                },
+            },
+            {
+                "type": "input",
+                "block_id": "ai_notes",
+                "optional": True,
+                "label": {"type": "plain_text", "text": "Anything else?"},
+                "hint": {
+                    "type": "plain_text",
+                    "text": "Things your site doesn't say — grant-size range, exclusions…",
+                },
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "value",
+                    "multiline": True,
+                },
+            },
+            {
+                "type": "actions",
+                "block_id": "clew_ai_draft_actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": ":sparkles: Draft with AI",
+                        },
+                        "action_id": "clew_ai_draft_profile",
+                    }
+                ],
+            },
+            {"type": "divider"},
+        ]
+
     return {
         "type": "modal",
         "callback_id": ORG_PROFILE_CALLBACK_ID,
@@ -93,6 +153,7 @@ def build_org_profile_modal(existing: dict | None = None) -> dict:
         "submit": {"type": "plain_text", "text": "Save Profile"},
         "close": {"type": "plain_text", "text": "Cancel"},
         "blocks": [
+            *ai_draft_blocks,
             {
                 "type": "context",
                 "elements": [

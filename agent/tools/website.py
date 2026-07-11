@@ -57,6 +57,38 @@ def _extract_text(html: str) -> tuple[str, str, str]:
     return parser.title.strip(), parser.meta_description.strip(), text
 
 
+async def fetch_website_text(url: str) -> str:
+    """Fetch a URL and return a TITLE/META/PAGE TEXT summary, or a
+    human-readable error string. Shared by the agent tool and the modal's
+    AI-draft flow."""
+    url = url.strip()
+    if not urlparse(url).scheme:
+        url = "https://" + url
+    if urlparse(url).scheme not in ("http", "https"):
+        return "Only http(s) URLs can be fetched."
+
+    try:
+        async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
+            async with session.get(
+                url, headers={"User-Agent": "Clew grant assistant"}
+            ) as resp:
+                if resp.status != 200:
+                    return f"Could not fetch {url} (HTTP {resp.status})."
+                raw = await resp.content.read(MAX_BYTES)
+                html = raw.decode(resp.charset or "utf-8", errors="replace")
+    except Exception as e:
+        return f"Could not fetch {url} ({e})."
+
+    title, description, text = _extract_text(html)
+    summary_bits = []
+    if title:
+        summary_bits.append(f"TITLE: {title}")
+    if description:
+        summary_bits.append(f"META DESCRIPTION: {description}")
+    summary_bits.append(f"PAGE TEXT:\n{text[:MAX_TEXT_CHARS]}")
+    return "\n".join(summary_bits)
+
+
 @tool(
     name="fetch_org_website",
     description=(
@@ -77,39 +109,6 @@ def _extract_text(html: str) -> tuple[str, str, str]:
     },
 )
 async def fetch_org_website_tool(args):
-    url = args["url"].strip()
-    if not urlparse(url).scheme:
-        url = "https://" + url
-    if urlparse(url).scheme not in ("http", "https"):
-        return {
-            "content": [{"type": "text", "text": "Only http(s) URLs can be fetched."}]
-        }
-
-    try:
-        async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
-            async with session.get(
-                url, headers={"User-Agent": "Clew grant assistant"}
-            ) as resp:
-                if resp.status != 200:
-                    return {
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": f"Could not fetch {url} (HTTP {resp.status}).",
-                            }
-                        ]
-                    }
-                raw = await resp.content.read(MAX_BYTES)
-                html = raw.decode(resp.charset or "utf-8", errors="replace")
-    except Exception as e:
-        return {"content": [{"type": "text", "text": f"Could not fetch {url} ({e})."}]}
-
-    title, description, text = _extract_text(html)
-    summary_bits = []
-    if title:
-        summary_bits.append(f"TITLE: {title}")
-    if description:
-        summary_bits.append(f"META DESCRIPTION: {description}")
-    summary_bits.append(f"PAGE TEXT:\n{text[:MAX_TEXT_CHARS]}")
-
-    return {"content": [{"type": "text", "text": "\n".join(summary_bits)}]}
+    return {
+        "content": [{"type": "text", "text": await fetch_website_text(args["url"])}]
+    }

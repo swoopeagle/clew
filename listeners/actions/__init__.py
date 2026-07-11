@@ -2,7 +2,7 @@ from slack_bolt.async_app import AsyncApp
 
 from .feedback_buttons import handle_feedback_button
 from .find_grants_action import handle_find_grants
-from .org_profile_actions import handle_open_org_profile
+from .org_profile_actions import handle_ai_draft_profile, handle_open_org_profile
 from .prospect_actions import (
     handle_approve_prospect,
     handle_mark_applied,
@@ -18,6 +18,7 @@ from .prospect_actions import (
 def register(app: AsyncApp):
     app.action("feedback")(handle_feedback_button)
     app.action("clew_open_org_profile")(handle_open_org_profile)
+    app.action("clew_ai_draft_profile")(handle_ai_draft_profile)
     app.action("clew_find_grants")(handle_find_grants)
     app.action("clew_approve_prospect")(handle_approve_prospect)
     app.action("clew_pass_prospect")(handle_pass_prospect)
