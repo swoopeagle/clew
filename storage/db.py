@@ -87,6 +87,15 @@ def init_db() -> None:
         conn.close()
 
 
+def list_org_ids() -> list[str]:
+    conn = _connect()
+    try:
+        rows = conn.execute("SELECT org_id FROM org_profile").fetchall()
+        return [row["org_id"] for row in rows]
+    finally:
+        conn.close()
+
+
 def get_org_profile(org_id: str) -> dict | None:
     conn = _connect()
     try:
