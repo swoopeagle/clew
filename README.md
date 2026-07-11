@@ -161,6 +161,15 @@ both double-handles every event). The redirect URL registered in the Slack app c
 match `SLACK_REDIRECT_URI` exactly (e.g. your `ngrok http 3000` URL +
 `/slack/oauth_redirect`).
 
+## The Clew web board
+
+**https://clew-board.vercel.app** — a live, read-only view of the same grant pipeline
+for the whole team: profile, pipeline stats, and every prospect by stage with deadlines
+and cited sources. The Slack app serves `GET /api/board` (port 3001) from the same
+SQLite the agent's tools write; the Next.js app in `web/` polls it every 15 seconds.
+All actions (approve, pass, stage moves) happen in Slack — the board visualizes them
+in real time.
+
 ## Project structure
 
 - **`storage/`** — SQLite schema and CRUD for `org_profile` and `prospects` (the single

@@ -65,6 +65,20 @@ Information → Delete App / Display Information). Judges clicking a dead duplic
 is an avoidable UX fail. App icons are ready in `assets/icon/` (three variants +
 flat versions) — upload one under Display Information while you're there.
 
+## The web board (added late Friday)
+
+**https://clew-board.vercel.app** — a read-only Next.js board (in `web/`) showing the
+live pipeline: org profile, stat tiles, kanban by stage, deadlines, citations. It polls
+`GET /api/board` (served by the Python process on port 3001, `webapi.py`) through a
+Cloudflare quick tunnel. Architecture story: the agent writes through MCP tools; the
+web board renders the same SQLite state live. **Operational chain that must ALL be
+running for the public board to work:** `app.py` (bot + API) → `cloudflared tunnel
+--url http://localhost:3001` → the tunnel URL set as `CLEW_API_URL` in the Vercel
+project (jays-projects/clew-board). ⚠️ Quick-tunnel URLs change on every cloudflared
+restart — if it restarts, update `CLEW_API_URL` on Vercel (`vercel env`) and redeploy
+(`cd web && vercel deploy --prod`). All writes stay in Slack; the web app has no write
+endpoints.
+
 ## Remaining work, in priority order
 
 1. **Finish live verification** (30 min of clicking): Approve → deadline modal →
