@@ -11,7 +11,6 @@ import asyncio
 from claude_agent_sdk import tool
 
 from agent.context import agent_deps_var
-from listeners.views.prospect_card_builder import build_prospect_card_blocks
 from storage import insert_prospect, update_prospect
 
 
@@ -70,6 +69,11 @@ from storage import insert_prospect, update_prospect
     },
 )
 async def save_qualified_prospect_tool(args):
+    # Imported lazily inside the handler to avoid an import cycle: the agent
+    # layer builds a Slack view here, but the listeners layer imports the
+    # agent. Deferring keeps import order independent of entry point.
+    from listeners.views.prospect_card_builder import build_prospect_card_blocks
+
     deps = agent_deps_var.get()
 
     prospect_id = await asyncio.to_thread(
