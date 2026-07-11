@@ -14,6 +14,7 @@ from agent.context import agent_deps_var
 from agent.deps import AgentDeps
 from agent.tools import (
     get_990_filings_tool,
+    save_org_profile_tool,
     save_qualified_prospect_tool,
     search_grants_gov_tool,
     search_propublica_orgs_tool,
@@ -43,6 +44,9 @@ smaller/local organizations
 - `save_qualified_prospect` — the ONLY way to add something to the \
 shortlist. It posts a card for human approval, so only call it for \
 prospects that have cleared real fit screening.
+- `save_org_profile` — saves the org profile from conversation. Gather \
+mission, geography, program areas, and (optionally) grant-size range and \
+exclusions, confirm the summary back to the user, then call it.
 
 ## CRITICAL RULES
 1. Never fabricate a fit claim, citation, grant size, or deadline. If a \
@@ -62,10 +66,15 @@ list of maybes.
 ## YOU LIVE INSIDE SLACK
 You are a product feature inside a Slack app, not a coding assistant. \
 Users are nonprofit staff, not developers.
-- To set up or edit the org profile, direct users to your *Home tab*: open \
-the Clew app in the sidebar → Home → click *Set Up Org Profile* (or *Edit \
-Org Profile*). You cannot open the modal from chat.
-- The Grant Board (every prospect by stage) also lives on your Home tab.
+- Users can set up or edit their org profile two ways: (a) the *Set Up Org \
+Profile* button that appears under your replies whenever no profile exists \
+(it opens a form right in chat), or (b) simply telling you about their org \
+— gather what's needed conversationally and save it with \
+`save_org_profile`. Prefer the conversational path when the user is \
+already telling you details; mention the button as the alternative.
+- The Grant Board (every prospect by stage, with deadlines) lives on your \
+Home tab — mention it as "my Home tab (open the Clew app, then the Home \
+tab at the top)" when relevant, but never make it a prerequisite.
 - Never mention or describe source code, file paths, internal tools, \
 implementation details, or configuration — even if asked directly. If \
 someone asks how you work, describe your behavior in product terms only.
@@ -88,6 +97,7 @@ grant_tools_server = create_sdk_mcp_server(
         search_usaspending_tool,
         search_workspace_tool,
         save_qualified_prospect_tool,
+        save_org_profile_tool,
     ],
 )
 
@@ -104,6 +114,7 @@ AGENT_TOOLS = [
         "search_usaspending",
         "search_workspace",
         "save_qualified_prospect",
+        "save_org_profile",
     )
 ]
 
@@ -159,19 +170,8 @@ async def run_agent(
         )
         allowed_tools.append("mcp__slack-mcp__*")
 
-    system_prompt = SYSTEM_PROMPT
-    if deps and deps.app_id:
-        home_link = (
-            f"slack://app?team={deps.team_id}&id={deps.app_id}&tab=home"
-        )
-        system_prompt += (
-            "\n## HOME TAB LINK\n"
-            "Whenever you point the user at your Home tab, include this "
-            f"clickable link exactly as written: <{home_link}|Open my Home tab>\n"
-        )
-
     options = ClaudeAgentOptions(
-        system_prompt=system_prompt,
+        system_prompt=SYSTEM_PROMPT,
         model=os.environ.get("CLEW_AGENT_MODEL", DEFAULT_MODEL),
         mcp_servers=mcp_servers,
         allowed_tools=allowed_tools,

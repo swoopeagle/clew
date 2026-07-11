@@ -1,3 +1,4 @@
+import asyncio
 from logging import Logger
 
 from slack_bolt.context.async_context import AsyncBoltContext
@@ -10,6 +11,8 @@ from agent import AgentDeps, run_agent
 from agent.org_context import prepend_org_profile
 from thread_context import session_store
 from listeners.views.feedback_builder import build_feedback_blocks
+from listeners.views.setup_prompt_builder import build_profile_setup_blocks
+from storage import get_org_profile
 
 
 async def handle_message(
@@ -81,11 +84,14 @@ async def handle_message(
             prompt_text, session_id=existing_session_id, deps=deps
         )
 
-        # Stream response in thread with feedback buttons
+        # Stream response in thread with feedback buttons; when no org
+        # profile exists yet, add a one-click setup button under the reply.
         streamer = await say_stream()
         await streamer.append(markdown_text=response_text)
-        feedback_blocks = build_feedback_blocks()
-        await streamer.stop(blocks=feedback_blocks)
+        trailing_blocks = list(build_feedback_blocks())
+        if not await asyncio.to_thread(get_org_profile, team_id):
+            trailing_blocks = build_profile_setup_blocks() + trailing_blocks
+        await streamer.stop(blocks=trailing_blocks)
 
         # Store session ID for future context
         if new_session_id:
