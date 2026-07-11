@@ -12,3 +12,4 @@ class AgentDeps:
     message_ts: str
     user_token: str | None = None
     team_id: str = "default"
+    app_id: str | None = None

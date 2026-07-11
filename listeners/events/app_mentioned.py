@@ -14,6 +14,7 @@ from listeners.views.feedback_builder import build_feedback_blocks
 
 
 async def handle_app_mentioned(
+    body: dict,
     client: AsyncWebClient,
     context: AsyncBoltContext,
     event: dict,
@@ -63,6 +64,7 @@ async def handle_app_mentioned(
             message_ts=event["ts"],
             user_token=context.user_token,
             team_id=team_id,
+            app_id=body.get("api_app_id"),
         )
         prompt_text = await prepend_org_profile(cleaned_text, team_id)
         response_text, new_session_id = await run_agent(

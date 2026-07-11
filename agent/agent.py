@@ -159,8 +159,19 @@ async def run_agent(
         )
         allowed_tools.append("mcp__slack-mcp__*")
 
+    system_prompt = SYSTEM_PROMPT
+    if deps and deps.app_id:
+        home_link = (
+            f"slack://app?team={deps.team_id}&id={deps.app_id}&tab=home"
+        )
+        system_prompt += (
+            "\n## HOME TAB LINK\n"
+            "Whenever you point the user at your Home tab, include this "
+            f"clickable link exactly as written: <{home_link}|Open my Home tab>\n"
+        )
+
     options = ClaudeAgentOptions(
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=system_prompt,
         model=os.environ.get("CLEW_AGENT_MODEL", DEFAULT_MODEL),
         mcp_servers=mcp_servers,
         allowed_tools=allowed_tools,
