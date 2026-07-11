@@ -116,11 +116,24 @@ def test_build_prospect_card_blocks_has_approve_and_pass():
     assert values == ["42", "42"]
 
 
-def test_build_decided_card_blocks_has_no_actions():
+def test_build_decided_card_passed_has_no_actions():
+    prospect = {
+        "id": 42,
+        "name": "Acme Foundation",
+        "fit_rationale": "Funds youth education in CA.",
+    }
+    blocks = build_decided_card_blocks(prospect, ":x: *Passed*")
+    assert all(b["type"] != "actions" for b in blocks)
+
+
+def test_build_decided_card_approved_offers_application_help():
     prospect = {
         "id": 42,
         "name": "Acme Foundation",
         "fit_rationale": "Funds youth education in CA.",
     }
     blocks = build_decided_card_blocks(prospect, ":white_check_mark: *Approved*")
-    assert all(b["type"] != "actions" for b in blocks)
+    actions_block = next(b for b in blocks if b["type"] == "actions")
+    button = actions_block["elements"][0]
+    assert button["action_id"] == "clew_draft_application"
+    assert button["value"] == "42"

@@ -106,7 +106,8 @@ def build_prospect_card_blocks(prospect: dict, fit_sources: list[str]) -> list[d
 
 
 def build_decided_card_blocks(prospect: dict, decision_label: str) -> list[dict]:
-    """Re-render a prospect card after Approve/Pass, with buttons replaced by a status line."""
+    """Re-render a prospect card after Approve/Pass, with buttons replaced by a
+    status line. Approved cards keep one action: drafting the application."""
     blocks: list[dict] = [
         {
             "type": "header",
@@ -121,4 +122,22 @@ def build_decided_card_blocks(prospect: dict, decision_label: str) -> list[dict]
             "elements": [{"type": "mrkdwn", "text": decision_label}],
         },
     ]
+    if "Approved" in decision_label:
+        blocks.append(
+            {
+                "type": "actions",
+                "block_id": "clew_decided_actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": ":writing_hand: Help me apply",
+                        },
+                        "action_id": "clew_draft_application",
+                        "value": str(prospect["id"]),
+                    }
+                ],
+            }
+        )
     return blocks

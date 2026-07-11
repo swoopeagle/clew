@@ -13,7 +13,10 @@ from agent.org_context import prepend_org_profile
 from thread_context import session_store
 from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
-from listeners.views.setup_prompt_builder import build_profile_setup_blocks
+from listeners.views.setup_prompt_builder import (
+    build_chat_nav_blocks,
+    build_profile_setup_blocks,
+)
 from storage import get_org_profile
 
 
@@ -92,7 +95,9 @@ async def handle_app_mentioned(
         streamer = await say_stream()
         await streamer.append(markdown_text=response_text)
         trailing_blocks = list(build_feedback_blocks())
-        if not await asyncio.to_thread(get_org_profile, team_id):
+        if await asyncio.to_thread(get_org_profile, team_id):
+            trailing_blocks = build_chat_nav_blocks() + trailing_blocks
+        else:
             trailing_blocks = build_profile_setup_blocks() + trailing_blocks
         await streamer.stop(blocks=trailing_blocks)
 

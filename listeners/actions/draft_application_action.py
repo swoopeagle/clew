@@ -1,4 +1,5 @@
 import asyncio
+import json
 from logging import Logger
 
 from slack_bolt import Ack
@@ -9,19 +10,22 @@ from agent import AgentDeps, run_agent
 from agent.org_context import prepend_org_profile
 from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
-from listeners.views.setup_prompt_builder import build_profile_setup_blocks
-from storage import get_org_profile
+from storage import get_prospect
 
-FIND_GRANTS_PROMPT = (
-    "Find grants and foundations that fit our org profile and post any qualified "
-    "prospects for review. Run the complete sweep before replying: Grants.gov for "
-    "each program area, ProPublica foundations for our geography and areas (with "
-    "990 checks on promising ones), and USAspending for what similar orgs have "
-    "won. Don't stop after one source or ask permission to continue."
-)
+DRAFT_APPLICATION_PROMPT = """\
+Help us apply for this approved grant prospect. Produce your APPLICATION HELP \
+deliverable: fit summary, application outline (need statement, program \
+description, outcomes/evaluation, budget narrative bullets), 2-3 reusable \
+boilerplate paragraphs in our voice, and a requirements checklist with \
+anything unverified marked "VERIFY on the funder's site". Research the funder \
+with your search tools first if useful.
+
+PROSPECT:
+{prospect_json}
+"""
 
 
-async def handle_find_grants(
+async def handle_draft_application(
     ack: Ack,
     body: dict,
     client: AsyncWebClient,
@@ -30,25 +34,19 @@ async def handle_find_grants(
 ):
     await ack()
     try:
+        prospect_id = int(body["actions"][0]["value"])
+        prospect = await asyncio.to_thread(get_prospect, prospect_id)
+        if not prospect:
+            return
+
         user_id = body["user"]["id"]
         team_id = context.team_id or "default"
 
         dm = await client.conversations_open(users=user_id)
         channel_id = dm["channel"]["id"]
-
-        # Without a profile the agent can only ask for one — skip the run
-        # and offer the one-click setup path instead.
-        if not await asyncio.to_thread(get_org_profile, team_id):
-            await client.chat_postMessage(
-                channel=channel_id,
-                text="Set up your org profile first so Clew can screen grants for fit.",
-                blocks=build_profile_setup_blocks(),
-            )
-            return
-
         initial = await client.chat_postMessage(
             channel=channel_id,
-            text="Looking for grants that fit your org profile...",
+            text=f":writing_hand: Drafting an application outline for {prospect['name']}…",
         )
         thread_ts = initial["ts"]
 
@@ -67,11 +65,34 @@ async def handle_find_grants(
             if label:
                 await client.chat_update(channel=channel_id, ts=thread_ts, text=label)
 
-        prompt_text = await prepend_org_profile(FIND_GRANTS_PROMPT, team_id)
+        prospect_json = json.dumps(
+            {
+                k: prospect.get(k)
+                for k in (
+                    "name",
+                    "source",
+                    "program_area",
+                    "geography",
+                    "grant_size",
+                    "fit_rationale",
+                    "fit_sources",
+                    "deadline_date",
+                )
+            },
+            default=str,
+        )
+        prompt_text = await prepend_org_profile(
+            DRAFT_APPLICATION_PROMPT.format(prospect_json=prospect_json), team_id
+        )
         response_text, _ = await run_agent(
             prompt_text, deps=deps, on_tool_use=_tool_status
         )
 
+        await client.chat_update(
+            channel=channel_id,
+            ts=thread_ts,
+            text=f":writing_hand: Application help for {prospect['name']}",
+        )
         if response_text:
             await client.chat_postMessage(
                 channel=channel_id,
@@ -80,4 +101,4 @@ async def handle_find_grants(
                 blocks=build_feedback_blocks(),
             )
     except Exception as e:
-        logger.exception(f"Failed to run Find Grants: {e}")
+        logger.exception(f"Failed to draft application: {e}")
