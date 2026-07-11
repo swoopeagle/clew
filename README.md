@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/clew-icon-512.png" alt="Clew logo: a red thread tracing a C through a grey labyrinth" width="128" height="128">
+</p>
+
 # Clew
 
 **Grant prospecting for small nonprofit teams, right inside Slack.**
