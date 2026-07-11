@@ -13,7 +13,8 @@ def build_profile_setup_blocks() -> list[dict]:
                 "text": (
                     ":thread: *Let's set up your org profile* — it takes two "
                     "minutes, and Clew screens every grant against it. Or "
-                    "just tell me about your org right here in chat."
+                    "skip the form: paste your website link here and I'll "
+                    "draft it for you, or just tell me about your org."
                 ),
             },
         },

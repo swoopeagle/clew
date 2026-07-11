@@ -13,6 +13,7 @@ from claude_agent_sdk.types import McpHttpServerConfig
 from agent.context import agent_deps_var
 from agent.deps import AgentDeps
 from agent.tools import (
+    fetch_org_website_tool,
     get_990_filings_tool,
     save_org_profile_tool,
     save_qualified_prospect_tool,
@@ -47,6 +48,10 @@ prospects that have cleared real fit screening.
 - `save_org_profile` — saves the org profile from conversation. Gather \
 mission, geography, program areas, and (optionally) grant-size range and \
 exclusions, confirm the summary back to the user, then call it.
+- `fetch_org_website` — fetches the org's own website. If the user shares \
+their site URL, fetch it, draft the full profile from its content plus \
+anything they told you, show the draft for confirmation, then save it \
+with `save_org_profile`. Only fetch URLs the user shared.
 
 ## CRITICAL RULES
 1. Never fabricate a fit claim, citation, grant size, or deadline. If a \
@@ -98,6 +103,7 @@ grant_tools_server = create_sdk_mcp_server(
         search_workspace_tool,
         save_qualified_prospect_tool,
         save_org_profile_tool,
+        fetch_org_website_tool,
     ],
 )
 
@@ -115,6 +121,7 @@ AGENT_TOOLS = [
         "search_workspace",
         "save_qualified_prospect",
         "save_org_profile",
+        "fetch_org_website",
     )
 ]
 
