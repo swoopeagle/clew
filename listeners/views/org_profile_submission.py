@@ -77,5 +77,15 @@ async def handle_org_profile_submission(
 
         user_id = body["user"]["id"]
         await publish_home(client, user_id, team_id, context.user_token)
+
+        # Confirm in the user's DM with the saved profile and next actions.
+        from listeners.views.profile_saved_builder import build_profile_saved_blocks
+
+        dm = await client.conversations_open(users=user_id)
+        await client.chat_postMessage(
+            channel=dm["channel"]["id"],
+            text="Org profile saved!",
+            blocks=build_profile_saved_blocks(fields),
+        )
     except Exception as e:
         logger.exception(f"Failed to save org profile: {e}")

@@ -63,14 +63,21 @@ async def save_org_profile_tool(args):
         exclusions=args.get("exclusions"),
     )
 
-    # Refresh the user's App Home so the board/profile summary match.
-    # Imported lazily to avoid the agent<->listeners import cycle.
+    # Post a confirmation card and refresh App Home so the profile summary
+    # matches. Imported lazily to avoid the agent<->listeners import cycle.
     try:
         from listeners.views.home_refresh import publish_home
+        from listeners.views.profile_saved_builder import build_profile_saved_blocks
 
+        await deps.client.chat_postMessage(
+            channel=deps.channel_id,
+            thread_ts=deps.thread_ts,
+            text="Org profile saved!",
+            blocks=build_profile_saved_blocks(args),
+        )
         await publish_home(deps.client, deps.user_id, deps.team_id, deps.user_token)
     except Exception:
-        pass  # home refresh is best-effort; the profile itself is saved
+        pass  # confirmation is best-effort; the profile itself is saved
 
     return {
         "content": [
