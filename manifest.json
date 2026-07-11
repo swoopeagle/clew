@@ -4,7 +4,7 @@
   },
   "features": {
     "agent_view": {
-      "agent_description": "I find real, sourced grant and funder prospects that fit your organization, screen them for fit, and hand your team a shortlist to approve or pass on — built for small nonprofit teams without dedicated grant-research staff.",
+      "agent_description": "I find real, sourced grant and funder prospects that fit your organization, screen them for fit, and hand your team a shortlist to approve or pass on \u2014 built for small nonprofit teams without dedicated grant-research staff.",
       "suggested_prompts": [
         {
           "title": "Find grants for us",
@@ -62,7 +62,10 @@
         "reactions:write",
         "reactions:read",
         "users:read",
-        "assistant:write"
+        "assistant:write",
+        "channels:manage",
+        "channels:read",
+        "pins:write"
       ]
     }
   },

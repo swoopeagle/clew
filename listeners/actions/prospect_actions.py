@@ -68,6 +68,31 @@ async def handle_approve_prospect(
 
         team_id = context.team_id or "default"
         await publish_home(client, body["user"]["id"], team_id, context.user_token)
+
+        # War room: dedicated channel + AI brief for the approved grant.
+        # Imported lazily (grant_channel imports the agent layer).
+        from listeners.actions.origin import resolve_origin
+        from listeners.grant_channel import create_grant_channel
+
+        grant_channel_id = await create_grant_channel(
+            client,
+            body["user"]["id"],
+            prospect,
+            team_id,
+            logger,
+            user_token=context.user_token,
+        )
+        if grant_channel_id:
+            origin_channel, origin_thread = await resolve_origin(client, body)
+            await client.chat_postMessage(
+                channel=origin_channel,
+                thread_ts=origin_thread,
+                text=(
+                    f":file_folder: Opened <#{grant_channel_id}> for "
+                    f"*{prospect['name']}* — the brief is being prepared "
+                    "there now."
+                ),
+            )
     except Exception as e:
         logger.exception(f"Failed to approve prospect: {e}")
 

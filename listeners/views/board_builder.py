@@ -72,6 +72,8 @@ def build_board_blocks(
 
         for row in rows:
             line = f"• {_row_name(row, workspace_url)}"
+            if row.get("grant_channel_id"):
+                line += f"  <#{row['grant_channel_id']}>"
             if stage == "approved" and row.get("deadline_date"):
                 alarm = "⏰ " if _due_soon(row["deadline_date"]) else ""
                 line += f"  {alarm}_(due {row['deadline_date']})_"

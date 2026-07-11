@@ -62,10 +62,16 @@ CREATE TABLE IF NOT EXISTS prospects (
     retro_note TEXT,
     slack_channel_id TEXT,
     slack_message_ts TEXT,
+    grant_channel_id TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
 """
+
+# Columns added after the first release; applied to pre-existing DBs.
+_MIGRATIONS = [
+    "ALTER TABLE prospects ADD COLUMN grant_channel_id TEXT",
+]
 
 
 def _now() -> str:
@@ -82,6 +88,11 @@ def init_db() -> None:
     conn = _connect()
     try:
         conn.executescript(_SCHEMA)
+        for migration in _MIGRATIONS:
+            try:
+                conn.execute(migration)
+            except sqlite3.OperationalError:
+                pass  # column already exists
         conn.commit()
     finally:
         conn.close()

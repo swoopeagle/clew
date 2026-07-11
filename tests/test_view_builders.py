@@ -137,3 +137,22 @@ def test_build_decided_card_approved_offers_application_help():
     button = actions_block["elements"][0]
     assert button["action_id"] == "clew_draft_application"
     assert button["value"] == "42"
+
+
+def test_channel_name_for_slugifies():
+    from listeners.grant_channel import channel_name_for
+
+    name = channel_name_for("Promise Neighborhoods (ED-GRANT-26-054 / 84.215N)")
+    assert name.startswith("grant-promise-neighborhoods")
+    assert len(name) <= 75
+    import re
+
+    assert re.fullmatch(r"[a-z0-9-]+", name)
+
+
+def test_board_rows_link_war_room_channel():
+    blocks = build_board_blocks(
+        {"approved": [{"id": 1, "name": "Beta Fund", "grant_channel_id": "C123"}]}
+    )
+    texts = [b["text"]["text"] for b in blocks if b["type"] == "section"]
+    assert any("Beta Fund" in t and "<#C123>" in t for t in texts)

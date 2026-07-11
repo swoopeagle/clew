@@ -1,9 +1,7 @@
 from slack_sdk.web.async_client import AsyncWebClient
 
 
-async def resolve_origin(
-    client: AsyncWebClient, body: dict
-) -> tuple[str, str | None]:
+async def resolve_origin(client: AsyncWebClient, body: dict) -> tuple[str, str | None]:
     """Where a button click should be answered: the channel (and thread)
     it was clicked in, falling back to the user's DM for surfaces without
     a channel (e.g. App Home)."""
