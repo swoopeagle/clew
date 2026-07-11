@@ -19,6 +19,54 @@ The name comes from "clew" — the literal root of the word "clue," the ball of 
 gave Theseus so he could find his way back out of the labyrinth. Same idea: a thread through
 a maze of funders to the ones that actually fit.
 
+---
+
+## 🚧 Project status — WIP (Slack Agent Builder Challenge, "Agent for Good")
+
+This is an early hackathon build. The core loop works end-to-end and has been verified live in
+a real Slack workspace, but it is not polished and there are known gaps.
+
+**Built and verified live:**
+- App runs in Slack (Bolt for Python, Socket Mode) and connects cleanly.
+- The agent searches three real, free grant-data APIs (Grants.gov, ProPublica 990s,
+  USAspending), screens results against an org profile, and posts a shortlist of qualified
+  prospects as Block Kit cards with cited sources and Approve/Pass buttons.
+- In a live test (an Oakland after-school STEM org profile), it correctly rejected
+  university/research-scale federal grants as wrong-fit, surfaced two real Bay Area
+  grantmakers with verifiable ProPublica citations, and *declined to fabricate* fit for a
+  funder it had no evidence on — the trust behavior working as intended.
+- SQLite persistence and the full lifecycle stage machine (qualified → approved → applied →
+  submitted → awarded/declined, plus deadline, report-due, and org-learning retro) all work.
+
+**Not yet verified / known gaps:**
+- The button-click → modal round-trip (Approve → deadline modal, board transitions) is wired
+  and unit-tested but not yet confirmed with a real click in Slack — that's the next test.
+- App Home doesn't auto-refresh after new cards post (a Slack platform limitation); may add a
+  manual Refresh affordance.
+- Warm-path workspace search (Real-Time Search API) requires OAuth install; it degrades
+  gracefully without it but hasn't been exercised live yet.
+- No onboarding polish, no empty-state guidance beyond the basics, minimal error surfacing.
+
+**How to run it yourself:** see [Setup](#setup) below. You'll need a Slack workspace you can
+install apps into and an Anthropic API key.
+
+### 🙏 Feedback wanted
+
+Genuinely early, so poke holes. A few specific things I'd love a second opinion on:
+
+1. **Fit quality** — set up an org profile for a nonprofit you know and run *Find Grants*. Are
+   the prospects it surfaces actually plausible fits? Where does its judgment feel off?
+2. **The trust framing** — the whole pitch is "sourced, no fabrication, five good leads over
+   fifty long shots." Does that land as genuinely different from paid tools, or is it too
+   subtle to matter to a real user?
+3. **Scope** — is prospecting-plus-light-lifecycle the right cut, or should the demo lean
+   harder on one thing? (See the [Roadmap](#roadmap) for what's deliberately deferred.)
+4. **The data-source gap** — Grants.gov/ProPublica/USAspending skew federal + larger
+   foundations. Small local/community grants are the hardest to surface. Ideas for free
+   sources that cover *small* opportunities are the single most valuable input right now.
+
+---
+
 ## What it does
 
 - **Find Grants** — searches [Grants.gov](https://grants.gov) (open federal opportunities),
