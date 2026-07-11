@@ -1,3 +1,11 @@
+from urllib.parse import urlparse
+
+
+def _source_label(url: str) -> str:
+    netloc = urlparse(url).netloc
+    return netloc.removeprefix("www.") or "source"
+
+
 def build_prospect_card_blocks(prospect: dict, fit_sources: list[str]) -> list[dict]:
     """Build the Block Kit shortlist card for one qualified prospect.
 
@@ -12,33 +20,49 @@ def build_prospect_card_blocks(prospect: dict, fit_sources: list[str]) -> list[d
         },
         {
             "type": "section",
-            "text": {"type": "mrkdwn", "text": prospect["fit_rationale"]},
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*Why it fits*\n{prospect['fit_rationale']}",
+            },
         },
     ]
 
-    meta_bits = []
+    meta_fields = []
     if prospect.get("program_area"):
-        meta_bits.append(f"*Program area:* {prospect['program_area']}")
-    if prospect.get("geography"):
-        meta_bits.append(f"*Geography:* {prospect['geography']}")
-    if prospect.get("grant_size"):
-        meta_bits.append(f"*Grant size:* {prospect['grant_size']}")
-    if meta_bits:
-        blocks.append(
+        meta_fields.append(
             {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": "\n".join(meta_bits)},
+                "type": "mrkdwn",
+                "text": f"*:dart: Program area*\n{prospect['program_area']}",
             }
         )
+    if prospect.get("geography"):
+        meta_fields.append(
+            {
+                "type": "mrkdwn",
+                "text": f"*:round_pushpin: Geography*\n{prospect['geography']}",
+            }
+        )
+    if prospect.get("grant_size"):
+        meta_fields.append(
+            {
+                "type": "mrkdwn",
+                "text": f"*:moneybag: Grant size*\n{prospect['grant_size']}",
+            }
+        )
+    if meta_fields:
+        blocks.append({"type": "section", "fields": meta_fields})
 
     if fit_sources:
         links = "\n".join(
-            f"• <{s}|Source>" if s.startswith("http") else f"• {s}" for s in fit_sources
+            f"• <{s}|{_source_label(s)}>" if s.startswith("http") else f"• {s}"
+            for s in fit_sources
         )
         blocks.append(
             {
                 "type": "context",
-                "elements": [{"type": "mrkdwn", "text": f"*Cited evidence:*\n{links}"}],
+                "elements": [
+                    {"type": "mrkdwn", "text": f":paperclip: *Cited evidence*\n{links}"}
+                ],
             }
         )
 
@@ -49,12 +73,13 @@ def build_prospect_card_blocks(prospect: dict, fit_sources: list[str]) -> list[d
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f":large_yellow_circle: *Warm path:* {prospect['warm_path_note']}",
+                        "text": f":yarn: *Warm path:* {prospect['warm_path_note']}",
                     }
                 ],
             }
         )
 
+    blocks.append({"type": "divider"})
     blocks.append(
         {
             "type": "actions",

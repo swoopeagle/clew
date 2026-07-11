@@ -18,7 +18,11 @@ def build_deadline_modal(prospect_id: int) -> dict:
                 "type": "input",
                 "block_id": "deadline_date",
                 "optional": True,
-                "label": {"type": "plain_text", "text": "Application deadline"},
+                "label": {"type": "plain_text", "text": "📅 Application deadline"},
+                "hint": {
+                    "type": "plain_text",
+                    "text": "Clew will flag it on your board when it's a week out.",
+                },
                 "element": {"type": "datepicker", "action_id": "value"},
             }
         ],
@@ -59,7 +63,7 @@ def build_awarded_modal(prospect_id: int, warm_path_hint: str | None = None) -> 
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "\U0001f389 *Awarded!* When's the first report due (if any)?",
+                "text": "\U0001f389 *Congratulations!* When's the first report due (if any)?",
             },
         },
         {
@@ -86,7 +90,13 @@ def build_declined_modal(prospect_id: int, warm_path_hint: str | None = None) ->
     blocks = [
         {
             "type": "section",
-            "text": {"type": "mrkdwn", "text": "Declined — quick retro for next time."},
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    "Not this time — capture the lesson so the next "
+                    "application is stronger."
+                ),
+            },
         },
         *_retro_block(warm_path_hint),
     ]

@@ -29,9 +29,7 @@ def _state_values(
                 ],
             }
         },
-        "program_areas_other": {
-            "value": {"type": "plain_text_input", "value": other}
-        },
+        "program_areas_other": {"value": {"type": "plain_text_input", "value": other}},
         "grant_size_min": {"value": {"type": "number_input", "value": grant_min}},
         "grant_size_max": {"value": {"type": "number_input", "value": grant_max}},
         "exclusions": {"value": {"type": "plain_text_input", "value": exclusions}},
@@ -119,9 +117,7 @@ def test_board_flags_deadlines_due_within_a_week():
         }
     )
     texts = [
-        b["text"]["text"]
-        for b in blocks
-        if b["type"] == "section" and "text" in b
+        b["text"]["text"] for b in blocks if b["type"] == "section" and "text" in b
     ]
     assert any("Soon Fund" in t and "⏰" in t for t in texts)
     assert not any("Later Fund" in t and "⏰" in t for t in texts)

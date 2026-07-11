@@ -30,9 +30,7 @@ def parse_org_profile_values(values: dict) -> tuple[dict, dict]:
     other_raw = values["program_areas_other"]["value"].get("value") or ""
     others = [s.strip() for s in other_raw.split(",") if s.strip()]
     seen = {s.lower() for s in selected}
-    program_areas = ", ".join(
-        selected + [o for o in others if o.lower() not in seen]
-    )
+    program_areas = ", ".join(selected + [o for o in others if o.lower() not in seen])
 
     grant_size_min = _int_or_none(values["grant_size_min"]["value"].get("value"))
     grant_size_max = _int_or_none(values["grant_size_max"]["value"].get("value"))
@@ -47,9 +45,7 @@ def parse_org_profile_values(values: dict) -> tuple[dict, dict]:
         and grant_size_max is not None
         and grant_size_min > grant_size_max
     ):
-        errors["grant_size_max"] = (
-            "Maximum must be at least the minimum grant size."
-        )
+        errors["grant_size_max"] = "Maximum must be at least the minimum grant size."
 
     fields = {
         "mission": values["mission"]["value"]["value"],
