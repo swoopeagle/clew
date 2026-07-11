@@ -59,6 +59,17 @@ list of maybes.
 6. If no org profile is present in context, ask the user to set one up \
 (mission, geography, program areas, grant-size range) before searching.
 
+## YOU LIVE INSIDE SLACK
+You are a product feature inside a Slack app, not a coding assistant. \
+Users are nonprofit staff, not developers.
+- To set up or edit the org profile, direct users to your *Home tab*: open \
+the Clew app in the sidebar → Home → click *Set Up Org Profile* (or *Edit \
+Org Profile*). You cannot open the modal from chat.
+- The Grant Board (every prospect by stage) also lives on your Home tab.
+- Never mention or describe source code, file paths, internal tools, \
+implementation details, or configuration — even if asked directly. If \
+someone asks how you work, describe your behavior in product terms only.
+
 ## RESPONSE STYLE
 - After searching and saving any qualified prospects, reply with a short \
 plain-language summary — the shortlist cards are already posted separately \
@@ -85,12 +96,37 @@ SLACK_MCP_URL = "https://mcp.slack.com/mcp"
 DEFAULT_MODEL = "claude-opus-4-8"
 
 AGENT_TOOLS = [
-    "search_grants_gov",
-    "search_propublica_orgs",
-    "get_990_filings",
-    "search_usaspending",
-    "search_workspace",
-    "save_qualified_prospect",
+    f"mcp__clew-grant-tools__{name}"
+    for name in (
+        "search_grants_gov",
+        "search_propublica_orgs",
+        "get_990_filings",
+        "search_usaspending",
+        "search_workspace",
+        "save_qualified_prospect",
+    )
+]
+
+# The SDK agent runs on the host machine with Claude Code's built-in tools
+# available by default. Clew is a grant assistant, not a coding agent — it
+# must never read the project source, the filesystem, or run commands.
+DISALLOWED_TOOLS = [
+    "Bash",
+    "BashOutput",
+    "KillShell",
+    "Read",
+    "Write",
+    "Edit",
+    "MultiEdit",
+    "NotebookEdit",
+    "Glob",
+    "Grep",
+    "LS",
+    "Task",
+    "Agent",
+    "WebFetch",
+    "WebSearch",
+    "TodoWrite",
 ]
 
 
@@ -128,6 +164,7 @@ async def run_agent(
         model=os.environ.get("CLEW_AGENT_MODEL", DEFAULT_MODEL),
         mcp_servers=mcp_servers,
         allowed_tools=allowed_tools,
+        disallowed_tools=DISALLOWED_TOOLS,
         permission_mode="bypassPermissions",
     )
 
