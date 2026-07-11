@@ -17,12 +17,12 @@ test = [
     "pytest-asyncio==1.4.0",
 ]
 dev = [
-    "bolt-python-support-agent-claude[test]",
+    "clew[test]",
     "ruff==0.15.20",
 ]
 
 [tool.setuptools.packages.find]
-include = ["agent*", "listeners*", "thread_context*"]
+include = ["agent*", "listeners*", "thread_context*", "storage*"]
 
 [tool.ruff]
 [tool.ruff.lint]

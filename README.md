@@ -154,6 +154,13 @@ Workspace search requires OAuth (not just Socket Mode). See `app_oauth.py` and t
 for that setup. Without it, Clew works fully — it just skips the warm-path check rather than
 guessing.
 
+`app_oauth.py` serves the OAuth endpoints (`/slack/install`, `/slack/oauth_redirect`) over
+HTTP while still receiving events over Socket Mode, so it fully replaces `app.py` — run
+exactly one of the two, never both (each opens its own Socket Mode connection, so running
+both double-handles every event). The redirect URL registered in the Slack app config must
+match `SLACK_REDIRECT_URI` exactly (e.g. your `ngrok http 3000` URL +
+`/slack/oauth_redirect`).
+
 ## Project structure
 
 - **`storage/`** — SQLite schema and CRUD for `org_profile` and `prospects` (the single

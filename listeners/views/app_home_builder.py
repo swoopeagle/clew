@@ -77,6 +77,14 @@ def build_app_home_view(
                     "text": {"type": "plain_text", "text": "Find Grants"},
                     "action_id": "clew_find_grants",
                 },
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": ":arrows_counterclockwise: Refresh",
+                    },
+                    "action_id": "clew_refresh_home",
+                },
             ],
         }
     )

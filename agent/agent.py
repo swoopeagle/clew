@@ -1,3 +1,5 @@
+import os
+
 from claude_agent_sdk import (
     AssistantMessage,
     ClaudeAgentOptions,
@@ -80,6 +82,8 @@ grant_tools_server = create_sdk_mcp_server(
 
 SLACK_MCP_URL = "https://mcp.slack.com/mcp"
 
+DEFAULT_MODEL = "claude-opus-4-8"
+
 AGENT_TOOLS = [
     "search_grants_gov",
     "search_propublica_orgs",
@@ -121,6 +125,7 @@ async def run_agent(
 
     options = ClaudeAgentOptions(
         system_prompt=SYSTEM_PROMPT,
+        model=os.environ.get("CLEW_AGENT_MODEL", DEFAULT_MODEL),
         mcp_servers=mcp_servers,
         allowed_tools=allowed_tools,
         permission_mode="bypassPermissions",

@@ -1,10 +1,13 @@
+import asyncio
 import json
 import logging
 import os
 from pathlib import Path
 from urllib.parse import urljoin
 
+from aiohttp import web
 from dotenv import load_dotenv
+from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from slack_bolt.authorization.authorize_result import AuthorizeResult
 from slack_bolt.async_app import AsyncApp
 from slack_bolt.oauth.async_oauth_settings import AsyncOAuthSettings
@@ -119,10 +122,28 @@ app = AsyncApp(
 
 register_listeners(app)
 
-if __name__ == "__main__":
+
+async def main():
+    """Serve the OAuth endpoints over HTTP while receiving events over
+    Socket Mode. The manifest has socket_mode_enabled, so Slack delivers
+    events/interactivity to the socket connection and ignores the HTTP
+    request URLs — the aiohttp server exists only for /slack/install and
+    /slack/oauth_redirect. Run either this or app.py, never both."""
     port = int(os.environ.get("PORT", 3000))
     redirect_uri = os.environ.get("SLACK_REDIRECT_URI", "")
     if redirect_uri:
         install_url = urljoin(redirect_uri, "/slack/install")
-        logger.info("Connect the Slack MCP Server: %s", install_url)
-    app.start(port=port)
+        logger.info("Connect workspace search (OAuth install): %s", install_url)
+
+    server = app.server(port=port)
+    runner = web.AppRunner(server.web_app)
+    await runner.setup()
+    await web.TCPSite(runner, host=server.host, port=port).start()
+    logger.info("OAuth server listening on port %s", port)
+
+    handler = AsyncSocketModeHandler(app, os.environ.get("SLACK_APP_TOKEN"))
+    await handler.start_async()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

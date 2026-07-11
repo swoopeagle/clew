@@ -1,4 +1,5 @@
 import asyncio
+import os
 from datetime import datetime, timezone
 from logging import Logger
 
@@ -22,7 +23,10 @@ async def _warm_path_hint(user_token: str | None, funder_name: str) -> str | Non
     if not user_token:
         return None
     try:
-        user_client = AsyncWebClient(token=user_token)
+        user_client = AsyncWebClient(
+            token=user_token,
+            base_url=os.environ.get("SLACK_API_URL", "https://slack.com/api/"),
+        )
         resp = await user_client.search_messages(query=funder_name, count=3)
         matches = resp.get("messages", {}).get("matches", [])
         if not matches:
@@ -44,6 +48,11 @@ async def handle_approve_prospect(
     await ack()
     try:
         prospect_id = int(body["actions"][0]["value"])
+        # Open the modal first — trigger_id expires 3 seconds after the click.
+        await client.views_open(
+            trigger_id=body["trigger_id"], view=build_deadline_modal(prospect_id)
+        )
+
         await asyncio.to_thread(update_prospect, prospect_id, stage="approved")
         prospect = await asyncio.to_thread(get_prospect, prospect_id)
 
@@ -57,9 +66,8 @@ async def handle_approve_prospect(
                 ),
             )
 
-        await client.views_open(
-            trigger_id=body["trigger_id"], view=build_deadline_modal(prospect_id)
-        )
+        team_id = context.team_id or "default"
+        await publish_home(client, body["user"]["id"], team_id, context.user_token)
     except Exception as e:
         logger.exception(f"Failed to approve prospect: {e}")
 
@@ -84,8 +92,26 @@ async def handle_pass_prospect(
                 text=f"Passed: {prospect['name']}",
                 blocks=build_decided_card_blocks(prospect, ":x: *Passed*"),
             )
+
+        team_id = context.team_id or "default"
+        await publish_home(client, body["user"]["id"], team_id, context.user_token)
     except Exception as e:
         logger.exception(f"Failed to pass prospect: {e}")
+
+
+async def handle_refresh_home(
+    ack: Ack,
+    body: dict,
+    client: AsyncWebClient,
+    context: AsyncBoltContext,
+    logger: Logger,
+):
+    await ack()
+    try:
+        team_id = context.team_id or "default"
+        await publish_home(client, body["user"]["id"], team_id, context.user_token)
+    except Exception as e:
+        logger.exception(f"Failed to refresh home: {e}")
 
 
 async def _advance_stage_and_refresh(

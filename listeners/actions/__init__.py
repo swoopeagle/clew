@@ -11,6 +11,7 @@ from .prospect_actions import (
     handle_mark_reported,
     handle_mark_submitted,
     handle_pass_prospect,
+    handle_refresh_home,
 )
 
 
@@ -25,3 +26,4 @@ def register(app: AsyncApp):
     app.action("clew_mark_awarded")(handle_mark_awarded)
     app.action("clew_mark_declined")(handle_mark_declined)
     app.action("clew_mark_reported")(handle_mark_reported)
+    app.action("clew_refresh_home")(handle_refresh_home)
