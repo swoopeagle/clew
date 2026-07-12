@@ -97,21 +97,31 @@ walkthrough-grounded video script, and 5 reference GIFs**.
   `docs/video-script.md` (walkthrough-grounded), and 5 reference GIFs in Ian's
   Downloads (onboarding, approve→war room, brief, board, award-history).
 
-## 4. Ops runbook
+## 4. Ops runbook — ☁️ THE BOT NOW RUNS ON RAILWAY (Sunday cutover, supersedes laptops)
+
+**Production host: Railway** (Jay's account, project `clew`, service `clew`).
+Permanent URL: **https://clew-production.up.railway.app** — serves Socket Mode bot +
+OAuth (`/slack/install`, `/slack/oauth_redirect`) + board API (`/api/board`) on one
+domain. Persistent volume at `/app/data` holds `clew.db` + OAuth installs — state
+survives every restart/deploy. Vercel's `CLEW_API_URL` points here permanently:
+**no more tunnels, no more laptops, no run_clew.sh.**
+
+⚠️ **IAN: your local runner is intentionally locked out.** The app-level token was
+regenerated during the migration, so `run_clew.sh` on your machine now fails auth —
+that's expected, just stop it. Do NOT regenerate tokens to get back in; that would
+kill the Railway host. All laptop instructions below/above in this doc are obsolete.
 
 ```sh
-# run the bot (EXACTLY ONE; app_oauth.py is the one — OAuth is installed)
-.venv/bin/python app_oauth.py           # bot + OAuth + board API :3001
-# OR, for judging weekend (auto-restart + caffeinate):
-bash scripts/run_clew.sh
-
-# OAuth (re)install only if needed — tunnel on :3000, visit <tunnel>/slack/install
-cloudflared tunnel --url http://localhost:3000
+# deploy a change (from repo root, after git push):
+npx @railway/cli up -d                  # rebuild + deploy to Railway
+npx @railway/cli logs                   # tail production logs
+npx @railway/cli variables              # inspect env (set with --set "K=V")
+# Railway CLI is authed on Jay's machine; Ian: `railway login` w/ Jay's ok, or ask Jay.
 
 # for the video recording: better prose on Opus
-#   set CLEW_AGENT_MODEL=claude-opus-4-8 in .env, restart
+#   railway variables --set "CLEW_AGENT_MODEL=claude-opus-4-8" (then redeploy)
 
-# checks
+# checks (local dev)
 .venv/bin/python -m pytest              # 39 green
 .venv/bin/ruff check . && .venv/bin/ruff format .
 ```

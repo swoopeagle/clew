@@ -131,7 +131,9 @@ cp .env.sample .env   # add ANTHROPIC_API_KEY + Slack tokens
 
 On first run, `storage/db.py` creates `clew.db` in the project root automatically.
 
-To keep it alive unattended (auto-restart + no sleep): `bash scripts/run_clew.sh`.
+To keep it alive unattended locally: `bash scripts/run_clew.sh`. In production the
+bot runs as a Docker container on Railway (see `Dockerfile`; volume at `/app/data`
+for SQLite + persisted OAuth installs, everything served on one `$PORT`).
 
 ### Optional: warm-path detection (Real-Time Search API)
 
