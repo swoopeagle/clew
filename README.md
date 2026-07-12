@@ -4,113 +4,114 @@
 
 # Clew
 
-**Grant prospecting for small nonprofit teams, right inside Slack.**
+**A trust-first grant agent for small nonprofits, right inside Slack.**
 
-Clew is a Slack agent that finds real, currently-available grants and foundations that fit
-your organization, screens each one for fit against your mission, geography, program areas,
-and grant-size range, and hands your team a short, evidence-backed shortlist to approve or
-pass on. Nothing reaches your shortlist without a real citation attached — no invented
-funders, no fabricated grant sizes, no guessed deadlines.
+Clew learns your organization once, finds *real, currently-available* grants from free
+public data, screens each one against your mission, geography, program areas, and
+grant-size range, and runs the whole pipeline — shortlist, approval, war room, brief,
+application help, board — without your team leaving Slack. Nothing reaches your
+shortlist without a real citation attached: no invented funders, no fabricated grant
+sizes, no guessed deadlines.
 
-Built for the small nonprofit teams who actually do this work: solo executive directors
-writing grants themselves, volunteer-run organizations, and small (2–5 person) development
-teams without dedicated grant-research staff. Because the same small team also handles what
-happens *after* a prospect is approved, Clew stays with a grant through its whole lifecycle —
-deadline tracking, a submission status board, reporting reminders, and a short org-learning
-retro after every win or loss.
+Built for the small teams who actually do this work: solo executive directors writing
+grants themselves, volunteer-run organizations, and 2–5 person development teams
+priced out of the $200–600/month research tools.
 
-The name comes from "clew" — the literal root of the word "clue," the ball of thread Ariadne
-gave Theseus so he could find his way back out of the labyrinth. Same idea: a thread through
-a maze of funders to the ones that actually fit.
+The name comes from "clew" — the literal root of the word "clue," the ball of thread
+Ariadne gave Theseus so he could find his way back out of the labyrinth. Same idea: a
+thread through a maze of funders to the ones that actually fit.
 
----
-
-## 🚧 Project status — WIP (Slack Agent Builder Challenge, "Agent for Good")
-
-This is an early hackathon build. The core loop works end-to-end and has been verified live in
-a real Slack workspace, but it is not polished and there are known gaps.
-
-**Built and verified live:**
-- App runs in Slack (Bolt for Python, Socket Mode) and connects cleanly.
-- The agent searches three real, free grant-data APIs (Grants.gov, ProPublica 990s,
-  USAspending), screens results against an org profile, and posts a shortlist of qualified
-  prospects as Block Kit cards with cited sources and Approve/Pass buttons.
-- In a live test (an Oakland after-school STEM org profile), it correctly rejected
-  university/research-scale federal grants as wrong-fit, surfaced two real Bay Area
-  grantmakers with verifiable ProPublica citations, and *declined to fabricate* fit for a
-  funder it had no evidence on — the trust behavior working as intended.
-- SQLite persistence and the full lifecycle stage machine (qualified → approved → applied →
-  submitted → awarded/declined, plus deadline, report-due, and org-learning retro) all work.
-
-**Not yet verified / known gaps:**
-- The button-click → modal round-trip (Approve → deadline modal, board transitions) is wired
-  and unit-tested but not yet confirmed with a real click in Slack — that's the next test.
-- App Home doesn't auto-refresh after new cards post (a Slack platform limitation); may add a
-  manual Refresh affordance.
-- Warm-path workspace search (Real-Time Search API) requires OAuth install; it degrades
-  gracefully without it but hasn't been exercised live yet.
-- No onboarding polish, no empty-state guidance beyond the basics, minimal error surfacing.
-
-**How to run it yourself:** see [Setup](#setup) below. You'll need a Slack workspace you can
-install apps into and an Anthropic API key.
-
-### 🙏 Feedback wanted
-
-Genuinely early, so poke holes. A few specific things I'd love a second opinion on:
-
-1. **Fit quality** — set up an org profile for a nonprofit you know and run *Find Grants*. Are
-   the prospects it surfaces actually plausible fits? Where does its judgment feel off?
-2. **The trust framing** — the whole pitch is "sourced, no fabrication, five good leads over
-   fifty long shots." Does that land as genuinely different from paid tools, or is it too
-   subtle to matter to a real user?
-3. **Scope** — is prospecting-plus-light-lifecycle the right cut, or should the demo lean
-   harder on one thing? (See the [Roadmap](#roadmap) for what's deliberately deferred.)
-4. **The data-source gap** — Grants.gov/ProPublica/USAspending skew federal + larger
-   foundations. Small local/community grants are the hardest to surface. Ideas for free
-   sources that cover *small* opportunities are the single most valuable input right now.
+Built for the **Slack Agent Builder Challenge ("Agent for Good")**. The full loop —
+onboarding → cited shortlist → approve → war room → brief → pipeline board — is
+verified live in a real Slack workspace. Submission materials live in
+[`docs/`](docs/) (Devpost text, architecture diagram, video script).
 
 ---
 
 ## What it does
 
-- **Find Grants** — searches [Grants.gov](https://grants.gov) (open federal opportunities),
-  [ProPublica's Nonprofit Explorer](https://projects.propublica.org/nonprofits/) (foundation
-  990 data), and [USAspending.gov](https://www.usaspending.gov) (real historical grant
-  awards — useful evidence for smaller/local funding) and screens results against your org
-  profile before anything reaches your shortlist.
-- **Shortlist cards** — each qualified prospect is posted as a Block Kit card with its fit
-  rationale, cited sources, and **Approve / Pass** buttons — the human-approval gate, made
-  visible as UI.
-- **Grant Board** — every prospect, grouped by stage (qualified → approved → applied →
-  submitted → awarded/declined/passed), right on the App Home tab.
-- **Lifecycle follow-through** — approving a prospect prompts for a deadline; marking a
-  grant awarded prompts for a report-due date and a short retro note; declined prospects get
-  the same retro prompt so the team remembers why next time.
-- **Warm-path detection** — when installed with OAuth, Clew checks the workspace's own
-  message history for prior mentions of a funder before qualifying it, and surfaces that at
-  retro time too. Degrades gracefully (never fabricates a "no mentions" claim) when
+- **Learn the org once.** Paste your website and Clew drafts your whole profile —
+  mission, geography, program areas, grant-size range — in seconds. Or tell it about
+  your org in chat, or use the guided form. All three land in the same profile.
+- **Find real, cited grants.** "Find grants" runs a full sweep across three free
+  public sources — [Grants.gov](https://grants.gov) (open federal opportunities),
+  [ProPublica's Nonprofit Explorer](https://projects.propublica.org/nonprofits/)
+  (foundation 990 data), and [USAspending.gov](https://www.usaspending.gov)
+  (historical awards) — screens every result against your profile, and posts a short
+  shortlist as Block Kit cards with fit rationale, cited sources, and
+  **Approve / Pass** buttons.
+- **Approve → a war room.** Approving a grant spins up a dedicated `#grant-<name>`
+  channel, invites you, and pins an AI **brief** — funder, amount, deadline,
+  requirements — everything cited, anything unverifiable quarantined in a VERIFY
+  list. Inside the room, "help me apply" just works: fit summary, application
+  outline, boilerplate in your org's voice, requirements checklist.
+- **Run the pipeline in Slack.** A stage funnel and board live on the App Home tab —
+  qualified → approved → applied → submitted → awarded — with deadline flags,
+  report-due reminders, and a short org-learning retro after each win or loss. App
+  Home also shows a live **"What Clew can see"** transparency panel.
+- **Know your history.** Ask what any org (yours, a peer, a grantee) has won and
+  Clew pulls its real federal award history from USAspending, cited, and flags
+  recurring funders.
+- **Warm-path detection.** With OAuth installed, Clew checks your workspace's own
+  message history (Slack Real-Time Search API) for prior mentions of a funder before
+  surfacing it — and grounds its channel replies in what your team actually
+  discussed. Degrades gracefully (never fabricates a "no mentions" claim) when
   unavailable.
+
+## The trust boundary is enforced, not promised
+
+The only way a prospect reaches your shortlist is through one tool —
+`save_qualified_prospect` — and that tool **rejects any prospect whose citations
+aren't real URLs from a source Clew actually queried** (grants.gov, propublica.org,
+usaspending.gov). No citation, no shortlist. The agent *cannot* hand you an uncited
+grant even if it tries. In the nonprofit world a made-up funder or a wrong deadline
+isn't a cute hallucination — it's a wasted week the team didn't have.
 
 ## Architecture
 
-Slack (Bolt for Python, Socket Mode) → an agent built on the **Claude Agent SDK**, with a
-custom **MCP server** exposing the grant-data tools (`search_grants_gov`,
-`search_propublica_orgs`, `get_990_filings`, `search_usaspending`, `search_workspace`,
-`save_qualified_prospect`) → free public APIs. All state — org profile and every prospect
-through every lifecycle stage — lives in a single SQLite file (`storage/db.py`); the
-shortlist cards, Grant Board, and lifecycle reminders are all views or transitions on that
-one table, not separate systems.
+Slack (Bolt for Python, Socket Mode + OAuth) → an agent built on the **Claude Agent
+SDK** (`ClaudeSDKClient`, per-thread sessions) → a custom in-process **MCP server**
+(`clew-grant-tools`) exposing nine tools:
 
-The agent may only add something to the shortlist by calling `save_qualified_prospect`,
-which requires a real cited source for every claim — this is Clew's trust boundary, not a
-suggestion in a prompt.
+| Tool | What it does |
+|---|---|
+| `search_grants_gov` | Open federal grant opportunities |
+| `search_propublica_orgs` | Foundations via ProPublica Nonprofit Explorer |
+| `get_990_filings` | A foundation's giving scale from IRS 990s |
+| `search_usaspending` | Historical federal award evidence |
+| `get_org_award_history` | An org's own federal funding history, cited |
+| `search_workspace` | Warm-path detection via Real-Time Search |
+| `fetch_org_website` | Draft the org profile from a URL |
+| `save_org_profile` | Persist the profile |
+| `save_qualified_prospect` | The enforced citation gate onto the shortlist |
+
+All state — the org profile and every prospect through every lifecycle stage — lives
+in a single SQLite file (`storage/db.py`); the shortlist cards, App Home
+funnel/board, war-room briefs, and lifecycle reminders are all views or transitions
+on that one table. Every grant API call is timeout-bounded and degrades to a clean
+"unavailable" rather than freezing a search or fabricating a result.
+
+**Security lockdown:** the agent's built-in filesystem/shell/web tools are
+disallowed — only the namespaced `clew-grant-tools` are allowed, so the agent can
+research grants and nothing else.
+
+See [`docs/architecture.svg`](docs/architecture.svg) for the full diagram.
+
+## The Clew web board
+
+**https://clew-board.vercel.app** — a live, read-only view of the same pipeline for
+board members who don't have Slack: profile, pipeline stats, and every prospect by
+stage with deadlines and cited sources. The Slack app serves `GET /api/board` (port
+3001, bearer-auth) from the same SQLite the agent's tools write; the Next.js app in
+`web/` polls it. Boards are reachable only through **signed per-org HMAC links**, so
+one org can't read another's pipeline. All actions happen in Slack — the board
+visualizes them in real time.
 
 ## Setup
 
 ### Prerequisites
 
-- A Slack workspace where you can install apps
-- The [Slack CLI](https://docs.slack.dev/tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux/)
+- A Slack workspace where you can install apps (see `manifest.json` for scopes)
 - An [Anthropic API key](https://console.anthropic.com/settings/keys)
 - Python 3.12+
 
@@ -123,76 +124,72 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-slack login
-cp .env.sample .env
-# add your ANTHROPIC_API_KEY to .env
+cp .env.sample .env   # add ANTHROPIC_API_KEY + Slack tokens
 
-slack run
+.venv/bin/python app.py          # Socket Mode bot + board API on :3001
 ```
 
 On first run, `storage/db.py` creates `clew.db` in the project root automatically.
 
-### Using it
-
-Open the app's **Home** tab in Slack:
-
-1. Click **Set Up Org Profile** and fill in your mission, geography, program areas, and
-   grant-size range.
-2. Click **Find Grants**. Clew searches, screens, and posts qualified prospects as cards in
-   a DM thread with you.
-3. **Approve** or **Pass** on each card. Approving prompts for a deadline.
-4. Track everything on the **Grant Board** section of App Home — mark prospects Applied,
-   Submitted, Awarded, or Declined as they move through your process.
-
-You can also just DM the agent or @mention it in a channel — "find grants for us" works the
-same way as clicking the button.
+To keep it alive unattended (auto-restart + no sleep): `bash scripts/run_clew.sh`.
 
 ### Optional: warm-path detection (Real-Time Search API)
 
-Workspace search requires OAuth (not just Socket Mode). See `app_oauth.py` and the
-`SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` / `SLACK_REDIRECT_URI` variables in `.env.sample`
-for that setup. Without it, Clew works fully — it just skips the warm-path check rather than
-guessing.
+Workspace search requires an OAuth install (not just Socket Mode). Run
+`app_oauth.py` **instead of** `app.py` — it serves the OAuth endpoints
+(`/slack/install`, `/slack/oauth_redirect`) over HTTP while still receiving events
+over Socket Mode. Never run both: each opens its own Socket Mode connection and
+every event gets handled twice. Set `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` /
+`SLACK_REDIRECT_URI` in `.env` (the redirect URL registered in the Slack app config
+must match exactly — e.g. a tunnel URL + `/slack/oauth_redirect`). The install
+persists to `data/installations/`, so it survives restarts; the tunnel is only
+needed to (re)install. Without OAuth, Clew works fully — it just skips the
+warm-path check rather than guessing.
 
-`app_oauth.py` serves the OAuth endpoints (`/slack/install`, `/slack/oauth_redirect`) over
-HTTP while still receiving events over Socket Mode, so it fully replaces `app.py` — run
-exactly one of the two, never both (each opens its own Socket Mode connection, so running
-both double-handles every event). The redirect URL registered in the Slack app config must
-match `SLACK_REDIRECT_URI` exactly (e.g. your `ngrok http 3000` URL +
-`/slack/oauth_redirect`).
+### Using it
 
-## The Clew web board
+Open the app in Slack:
 
-**https://clew-board.vercel.app** — a live, read-only view of the same grant pipeline
-for the whole team: profile, pipeline stats, and every prospect by stage with deadlines
-and cited sources. The Slack app serves `GET /api/board` (port 3001) from the same
-SQLite the agent's tools write; the Next.js app in `web/` polls it every 15 seconds.
-All actions (approve, pass, stage moves) happen in Slack — the board visualizes them
-in real time.
+1. In the **Messages** tab, click **Set Up Org Profile** — or just paste your
+   org's website URL.
+2. Click **Find Grants**. Clew sweeps the sources, screens for fit, and posts
+   qualified prospects as cited cards. (A full sweep takes a couple of minutes.)
+3. **Approve** a card to spawn its war room and pinned brief; try "help me apply"
+   inside it.
+4. Track everything on the **Home** tab — the pipeline funnel, the board, and the
+   "What Clew can see" panel.
 
 ## Project structure
 
-- **`storage/`** — SQLite schema and CRUD for `org_profile` and `prospects` (the single
-  source of truth for the whole grant lifecycle).
-- **`agent/`** — Claude Agent SDK configuration (`agent.py`), the grant-data and
-  qualification tools (`tools/`), and org-profile context injection (`org_context.py`).
+- **`agent/`** — Claude Agent SDK configuration (`agent.py`), the nine MCP tools
+  (`tools/`), org-profile and channel-history context injection.
+- **`storage/`** — SQLite schema and CRUD for `org_profile` and `prospects` (the
+  single source of truth for the whole lifecycle).
 - **`listeners/events`** — App Home, DM, and @mention entry points.
-- **`listeners/actions`** — button handlers: org profile, Find Grants, Approve/Pass, and
-  every Grant Board stage transition.
-- **`listeners/views`** — every Block Kit surface: the App Home, the Grant Board, the
-  shortlist card, the org profile modal, and the deadline/awarded/declined modals.
+- **`listeners/actions`** — button handlers: org profile, Find Grants, Approve/Pass,
+  draft-application, and every board stage transition.
+- **`listeners/views`** — every Block Kit surface: App Home (funnel, board,
+  transparency panel), shortlist cards, the war-room grant brief, org profile and
+  lifecycle modals.
+- **`web/`** — the Next.js web board; **`webapi.py`** — the bearer-auth board API
+  with HMAC-signed org links.
+- **`docs/`** — Devpost text, architecture diagram, video script.
 
 ## Roadmap
 
-Clew is deliberately scoped to prospecting and light lifecycle tracking for this build. The
-natural next chapter — application drafting assistance, a fuller submission workflow, and
-deeper evaluation/reporting support — follows the same pattern (a tool the agent calls, a
-stage on the same `prospects` table) but isn't built here.
+- **Full funding history:** federal wins are live (`get_org_award_history`); next,
+  reconstruct *foundation* funding history from public 990-PF grantee filings — a
+  funder graph where every edge is an IRS filing.
+- **Salesforce Nonprofit Cloud sync:** import an existing pipeline, push awarded
+  grants back — Clew as the system of *action* in Slack alongside the system of
+  record.
+- **More Slack-native surfaces:** the pipeline as a Slack List, war-room briefs as
+  living Canvases.
+- **Deadline chasing:** scheduled war-room reminders as a deadline nears.
 
 ## Development
 
 ```sh
-ruff check .
-ruff format .
-pytest
+.venv/bin/ruff check . && .venv/bin/ruff format .
+.venv/bin/python -m pytest   # 33 tests
 ```
