@@ -1,4 +1,5 @@
 import asyncio
+import json
 from logging import Logger
 
 from slack_bolt import Ack
@@ -78,12 +79,23 @@ async def handle_org_profile_submission(
         user_id = body["user"]["id"]
         await publish_home(client, user_id, team_id, context.user_token)
 
-        # Confirm in the user's DM with the saved profile and next actions.
+        # Confirm where the user was working (the click origin travels in
+        # the modal's private_metadata); fall back to their DM.
         from listeners.views.profile_saved_builder import build_profile_saved_blocks
 
-        dm = await client.conversations_open(users=user_id)
+        origin_channel = origin_thread = None
+        try:
+            metadata = json.loads(view.get("private_metadata") or "{}")
+            origin_channel = metadata.get("origin_channel")
+            origin_thread = metadata.get("origin_thread")
+        except (ValueError, TypeError):
+            pass
+        if not origin_channel:
+            dm = await client.conversations_open(users=user_id)
+            origin_channel = dm["channel"]["id"]
         await client.chat_postMessage(
-            channel=dm["channel"]["id"],
+            channel=origin_channel,
+            thread_ts=origin_thread,
             text="Org profile saved!",
             blocks=build_profile_saved_blocks(fields),
         )

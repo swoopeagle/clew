@@ -33,7 +33,11 @@ def split_program_areas(saved: str | None) -> tuple[list[str], list[str]]:
     return matched, leftover
 
 
-def build_org_profile_modal(existing: dict | None = None) -> dict:
+def build_org_profile_modal(
+    existing: dict | None = None, private_metadata: str = ""
+) -> dict:
+    """private_metadata carries the click origin (channel/thread) so the
+    saved-confirmation card can land where the user was working."""
     existing = existing or {}
 
     def _val(key, default=""):
@@ -149,6 +153,7 @@ def build_org_profile_modal(existing: dict | None = None) -> dict:
     return {
         "type": "modal",
         "callback_id": ORG_PROFILE_CALLBACK_ID,
+        "private_metadata": private_metadata,
         "title": {"type": "plain_text", "text": "Your Org Profile"},
         "submit": {"type": "plain_text", "text": "Save Profile"},
         "close": {"type": "plain_text", "text": "Cancel"},

@@ -283,3 +283,17 @@ def test_briefing_targets_roundtrip():
     set_briefing_channel("Ttarget", "D_HOME")
     targets = list_briefing_targets()
     assert {"org_id": "Ttarget", "briefing_channel_id": "D_HOME"} in targets
+
+
+def test_modal_carries_origin_metadata():
+    modal = build_org_profile_modal(None, private_metadata='{"origin_channel": "C1"}')
+    assert modal["private_metadata"] == '{"origin_channel": "C1"}'
+    # default stays empty, never missing
+    assert build_org_profile_modal(None)["private_metadata"] == ""
+
+
+def test_drafting_view_preserves_metadata():
+    from listeners.actions.org_profile_actions import _drafting_view
+
+    view = _drafting_view("your website", '{"origin_channel": "C1"}')
+    assert view["private_metadata"] == '{"origin_channel": "C1"}'

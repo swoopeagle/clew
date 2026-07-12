@@ -1,10 +1,12 @@
 import asyncio
+import json
 from logging import Logger
 
 from slack_bolt import Ack
 from slack_bolt.context.async_context import AsyncBoltContext
 from slack_sdk.web.async_client import AsyncWebClient
 
+from listeners.actions.origin import resolve_origin
 from listeners.views.org_profile_builder import build_org_profile_modal
 from storage import get_org_profile
 
@@ -20,8 +22,15 @@ async def handle_open_org_profile(
     try:
         team_id = context.team_id or "default"
         existing = await asyncio.to_thread(get_org_profile, team_id)
+        # Remember where the button was clicked so the saved-confirmation
+        # card can land there instead of a DM the user may never look at.
+        origin_channel, origin_thread = await resolve_origin(client, body)
+        metadata = json.dumps(
+            {"origin_channel": origin_channel, "origin_thread": origin_thread}
+        )
         await client.views_open(
-            trigger_id=body["trigger_id"], view=build_org_profile_modal(existing)
+            trigger_id=body["trigger_id"],
+            view=build_org_profile_modal(existing, private_metadata=metadata),
         )
     except Exception as e:
         logger.exception(f"Failed to open org profile modal: {e}")
@@ -38,10 +47,11 @@ def _with_context_note(view: dict, note: str) -> dict:
     }
 
 
-def _drafting_view(source: str) -> dict:
+def _drafting_view(source: str, private_metadata: str = "") -> dict:
     return {
         "type": "modal",
         "callback_id": "clew_ai_drafting",
+        "private_metadata": private_metadata,
         "title": {"type": "plain_text", "text": "Your Org Profile"},
         "close": {"type": "plain_text", "text": "Cancel"},
         "blocks": [
@@ -69,6 +79,7 @@ async def handle_ai_draft_profile(
 ):
     await ack()
     view_id = body["view"]["id"]
+    metadata = body["view"].get("private_metadata", "")
     values = body["view"]["state"]["values"]
     website = (values.get("ai_website", {}).get("value", {}) or {}).get("value") or ""
     notes = (values.get("ai_notes", {}).get("value", {}) or {}).get("value") or ""
@@ -78,7 +89,7 @@ async def handle_ai_draft_profile(
             await client.views_update(
                 view_id=view_id,
                 view=_with_context_note(
-                    build_org_profile_modal(None),
+                    build_org_profile_modal(None, private_metadata=metadata),
                     ":warning: Add your website or a few notes first, then "
                     "click Draft.",
                 ),
@@ -86,7 +97,9 @@ async def handle_ai_draft_profile(
             return
 
         source = "your website" if website.strip() else "your notes"
-        await client.views_update(view_id=view_id, view=_drafting_view(source))
+        await client.views_update(
+            view_id=view_id, view=_drafting_view(source, metadata)
+        )
 
         # Imported lazily: profile_draft pulls in the agent SDK query path,
         # which listeners otherwise don't need at import time.
@@ -98,7 +111,7 @@ async def handle_ai_draft_profile(
             await client.views_update(
                 view_id=view_id,
                 view=_with_context_note(
-                    build_org_profile_modal(draft),
+                    build_org_profile_modal(draft, private_metadata=metadata),
                     ":sparkles: *Drafted by AI* — review and edit before saving.",
                 ),
             )
@@ -106,7 +119,7 @@ async def handle_ai_draft_profile(
             await client.views_update(
                 view_id=view_id,
                 view=_with_context_note(
-                    build_org_profile_modal(None),
+                    build_org_profile_modal(None, private_metadata=metadata),
                     ":warning: Couldn't draft from that — check the URL or "
                     "add more detail, or just fill the form below.",
                 ),

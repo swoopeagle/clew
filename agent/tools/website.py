@@ -8,9 +8,9 @@ import aiohttp
 
 from claude_agent_sdk import tool
 
-MAX_BYTES = 200_000
+MAX_HTML_CHARS = 400_000
 MAX_TEXT_CHARS = 6_000
-TIMEOUT = aiohttp.ClientTimeout(total=10)
+TIMEOUT = aiohttp.ClientTimeout(total=15)
 
 _SKIP_TAGS = {"script", "style", "noscript", "svg", "head"}
 
@@ -57,36 +57,53 @@ def _extract_text(html: str) -> tuple[str, str, str]:
     return parser.title.strip(), parser.meta_description.strip(), text
 
 
+async def _fetch_html(url: str) -> str:
+    async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
+        async with session.get(
+            url, headers={"User-Agent": "Clew grant assistant"}
+        ) as resp:
+            if resp.status != 200:
+                raise RuntimeError(f"HTTP {resp.status}")
+            if int(resp.headers.get("Content-Length") or 0) > 5_000_000:
+                raise RuntimeError("page too large")
+            # resp.text() (not a raw stream read) — handles gzip/brotli
+            # decompression and charset; low-level reads returned partial
+            # bodies behind CDNs and broke extraction intermittently.
+            html = await resp.text(errors="replace")
+            return html[:MAX_HTML_CHARS]
+
+
 async def fetch_website_text(url: str) -> str:
     """Fetch a URL and return a TITLE/META/PAGE TEXT summary, or a
     human-readable error string. Shared by the agent tool and the modal's
-    AI-draft flow."""
+    AI-draft flow. Retries once — small nonprofit sites are often slow on
+    the first (cold) hit."""
     url = url.strip()
     if not urlparse(url).scheme:
         url = "https://" + url
     if urlparse(url).scheme not in ("http", "https"):
         return "Only http(s) URLs can be fetched."
 
-    try:
-        async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
-            async with session.get(
-                url, headers={"User-Agent": "Clew grant assistant"}
-            ) as resp:
-                if resp.status != 200:
-                    return f"Could not fetch {url} (HTTP {resp.status})."
-                raw = await resp.content.read(MAX_BYTES)
-                html = raw.decode(resp.charset or "utf-8", errors="replace")
-    except Exception as e:
-        return f"Could not fetch {url} ({e})."
+    last_error = ""
+    for _ in range(2):
+        try:
+            html = await _fetch_html(url)
+        except Exception as e:
+            last_error = str(e)
+            continue
+        title, description, text = _extract_text(html)
+        if not (title or description or text):
+            last_error = "no readable text on the page"
+            continue
+        summary_bits = []
+        if title:
+            summary_bits.append(f"TITLE: {title}")
+        if description:
+            summary_bits.append(f"META DESCRIPTION: {description}")
+        summary_bits.append(f"PAGE TEXT:\n{text[:MAX_TEXT_CHARS]}")
+        return "\n".join(summary_bits)
 
-    title, description, text = _extract_text(html)
-    summary_bits = []
-    if title:
-        summary_bits.append(f"TITLE: {title}")
-    if description:
-        summary_bits.append(f"META DESCRIPTION: {description}")
-    summary_bits.append(f"PAGE TEXT:\n{text[:MAX_TEXT_CHARS]}")
-    return "\n".join(summary_bits)
+    return f"Could not fetch {url} ({last_error})."
 
 
 @tool(
