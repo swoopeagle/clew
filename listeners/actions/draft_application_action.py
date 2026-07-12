@@ -1,9 +1,11 @@
 import asyncio
 import json
+import os
 from logging import Logger
 
 from slack_bolt import Ack
 from slack_bolt.context.async_context import AsyncBoltContext
+from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
 from agent import AgentDeps, run_agent
@@ -95,11 +97,65 @@ async def handle_draft_application(
             text=f":writing_hand: Application help for {prospect['name']}",
         )
         if response_text:
-            await client.chat_postMessage(
-                channel=channel_id,
-                thread_ts=thread_ts,
-                text=f"Application help for {prospect['name']}",
-                blocks=build_agent_message_blocks(response_text),
+            canvas_made = await _try_canvas(
+                context.user_token,
+                prospect,
+                response_text,
+                logger,
+                # Canvases attach to channels, not DMs — use the war room.
+                canvas_channel=prospect.get("grant_channel_id"),
             )
+            if canvas_made:
+                await client.chat_postMessage(
+                    channel=channel_id,
+                    thread_ts=thread_ts,
+                    text=(
+                        f":page_facing_up: I've drafted the application for "
+                        f"*{prospect['name']}* into the canvas of "
+                        f"<#{prospect['grant_channel_id']}> — open the channel "
+                        "canvas to edit it together."
+                    ),
+                )
+            else:
+                await client.chat_postMessage(
+                    channel=channel_id,
+                    thread_ts=thread_ts,
+                    text=f"Application help for {prospect['name']}",
+                    blocks=build_agent_message_blocks(response_text),
+                )
     except Exception as e:
         logger.exception(f"Failed to draft application: {e}")
+
+
+async def _try_canvas(
+    user_token: str | None,
+    prospect: dict,
+    outline: str,
+    logger: Logger,
+    canvas_channel: str | None,
+) -> bool:
+    """Write the application draft into the war room's channel canvas — a
+    living doc the team edits together. Requires the OAuth user token
+    (canvases:write is a user scope) and a war-room channel; returns False
+    on any miss so the caller falls back to posting the text in chat."""
+    if not user_token or not canvas_channel:
+        return False
+    try:
+        user_client = AsyncWebClient(
+            token=user_token,
+            base_url=os.environ.get("SLACK_API_URL", "https://slack.com/api/"),
+        )
+        markdown = f"# Application draft — {prospect['name']}\n\n{outline}"
+        await user_client.conversations_canvases_create(
+            channel_id=canvas_channel,
+            document_content={"type": "markdown", "markdown": markdown},
+        )
+        return True
+    except SlackApiError as e:
+        logger.warning(
+            f"Canvas draft failed ({e.response.get('error')}); falling back to chat"
+        )
+        return False
+    except Exception as e:
+        logger.warning(f"Canvas draft failed ({e}); falling back to chat")
+        return False
