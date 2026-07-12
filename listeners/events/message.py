@@ -8,6 +8,7 @@ from slack_bolt.context.set_status.async_set_status import AsyncSetStatus
 from slack_sdk.web.async_client import AsyncWebClient
 
 from agent import AgentDeps, run_agent
+from agent.channel_context import prepend_grant_channel_context
 from agent.org_context import prepend_org_profile
 from thread_context import session_store
 from listeners.events.tool_status import status_for
@@ -90,6 +91,7 @@ async def handle_message(
                 await set_status(status=label)
 
         prompt_text = await prepend_org_profile(text, team_id)
+        prompt_text = await prepend_grant_channel_context(prompt_text, channel_id)
         response_text, new_session_id = await run_agent(
             prompt_text,
             session_id=existing_session_id,
@@ -103,7 +105,7 @@ async def handle_message(
         await streamer.append(markdown_text=response_text)
         trailing_blocks = list(build_feedback_blocks())
         if await asyncio.to_thread(get_org_profile, team_id):
-            trailing_blocks = build_chat_nav_blocks() + trailing_blocks
+            trailing_blocks = build_chat_nav_blocks(team_id) + trailing_blocks
         else:
             trailing_blocks = build_profile_setup_blocks() + trailing_blocks
         await streamer.stop(blocks=trailing_blocks)

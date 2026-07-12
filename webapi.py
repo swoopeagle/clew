@@ -6,6 +6,8 @@ can render it. No write endpoints — all actions stay in Slack.
 """
 
 import asyncio
+import hashlib
+import hmac
 import os
 from datetime import datetime, timezone
 
@@ -22,6 +24,18 @@ STAGES = (
     "declined",
     "passed",
 )
+
+
+def board_link(org_id: str) -> str:
+    """Signed, org-scoped URL for the web board. Each workspace only ever
+    hands out its own link (via Slack buttons), so one org can't reach
+    another's board. Unsigned base URL when no secret is configured."""
+    base = os.environ.get("CLEW_BOARD_URL", "https://clew-board.vercel.app")
+    secret = os.environ.get("CLEW_BOARD_SECRET")
+    if not secret:
+        return base
+    sig = hmac.new(secret.encode(), org_id.encode(), hashlib.sha256).hexdigest()[:20]
+    return f"{base}?org={org_id}&sig={sig}"
 
 
 def _authorized(request: web.Request) -> bool:

@@ -202,6 +202,17 @@ def insert_prospect(
         conn.close()
 
 
+def get_prospect_by_grant_channel(channel_id: str) -> dict | None:
+    conn = _connect()
+    try:
+        row = conn.execute(
+            "SELECT * FROM prospects WHERE grant_channel_id = ?", (channel_id,)
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
 def get_prospect(prospect_id: int) -> dict | None:
     conn = _connect()
     try:

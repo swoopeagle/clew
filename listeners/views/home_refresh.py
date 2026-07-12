@@ -47,5 +47,6 @@ async def publish_home(
         install_url=install_url,
         is_connected=is_connected,
         workspace_url=await _get_workspace_url(client),
+        team_id=team_id,
     )
     await client.views_publish(user_id=user_id, view=view)

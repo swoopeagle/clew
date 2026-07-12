@@ -1,6 +1,7 @@
 from .db import (
     get_org_profile,
     get_prospect,
+    get_prospect_by_grant_channel,
     get_prospects_grouped_by_stage,
     init_db,
     insert_prospect,
@@ -15,6 +16,7 @@ __all__ = [
     "upsert_org_profile",
     "insert_prospect",
     "get_prospect",
+    "get_prospect_by_grant_channel",
     "update_prospect",
     "get_prospects_grouped_by_stage",
     "list_org_ids",

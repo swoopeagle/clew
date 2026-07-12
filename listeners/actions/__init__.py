@@ -23,6 +23,12 @@ def register(app: AsyncApp):
     app.action("clew_ai_draft_profile")(handle_ai_draft_profile)
     app.action("clew_show_saved")(handle_show_saved)
     app.action("clew_draft_application")(handle_draft_application)
+
+    # URL buttons still emit an action that must be acked.
+    async def _ack_only(ack):
+        await ack()
+
+    app.action("clew_open_web_board")(_ack_only)
     app.action("clew_find_grants")(handle_find_grants)
     app.action("clew_approve_prospect")(handle_approve_prospect)
     app.action("clew_pass_prospect")(handle_pass_prospect)

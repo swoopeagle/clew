@@ -90,6 +90,7 @@ def build_app_home_view(
     install_url: str | None = None,
     is_connected: bool = False,
     workspace_url: str | None = None,
+    team_id: str | None = None,
 ) -> dict:
     """Build the App Home Block Kit view: hero, org profile summary (or
     onboarding steps), action buttons, pipeline summary, and the grant board.
@@ -149,22 +150,37 @@ def build_app_home_view(
         if button["action_id"] == primary_action:
             button["style"] = "primary"
 
+    home_elements = [
+        profile_button,
+        find_button,
+        {
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": ":arrows_counterclockwise: Refresh",
+            },
+            "action_id": "clew_refresh_home",
+        },
+    ]
+    if team_id:
+        from webapi import board_link
+
+        home_elements.append(
+            {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": ":globe_with_meridians: Web Board",
+                },
+                "action_id": "clew_open_web_board",
+                "url": board_link(team_id),
+            }
+        )
     blocks.append(
         {
             "type": "actions",
             "block_id": "clew_home_actions",
-            "elements": [
-                profile_button,
-                find_button,
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": ":arrows_counterclockwise: Refresh",
-                    },
-                    "action_id": "clew_refresh_home",
-                },
-            ],
+            "elements": home_elements,
         }
     )
 

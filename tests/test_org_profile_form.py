@@ -153,3 +153,53 @@ def test_parse_draft_json_rejects_missing_mission():
 
     assert _parse_draft_json('{"geography": "Oakland"}') is None
     assert _parse_draft_json("no json here") is None
+
+
+def test_board_link_signs_org(monkeypatch):
+    from webapi import board_link
+
+    monkeypatch.setenv("CLEW_BOARD_URL", "https://example.vercel.app")
+    monkeypatch.setenv("CLEW_BOARD_SECRET", "test-secret")
+    link = board_link("T123")
+    assert link.startswith("https://example.vercel.app?org=T123&sig=")
+    assert link == board_link("T123")  # deterministic
+    assert board_link("T999") != link  # org-scoped
+
+    monkeypatch.delenv("CLEW_BOARD_SECRET")
+    assert board_link("T123") == "https://example.vercel.app"
+
+
+def test_get_prospect_by_grant_channel_roundtrip():
+    from storage import (
+        get_prospect_by_grant_channel,
+        insert_prospect,
+        update_prospect,
+    )
+
+    pid = insert_prospect(
+        org_id="Ttest",
+        name="Chan Fund",
+        source="grants_gov",
+        source_ref=None,
+        program_area=None,
+        geography=None,
+        grant_size=None,
+        fit_rationale="fits",
+        fit_sources=["https://example.com"],
+    )
+    update_prospect(pid, grant_channel_id="C42WARROOM")
+    row = get_prospect_by_grant_channel("C42WARROOM")
+    assert row and row["id"] == pid and row["name"] == "Chan Fund"
+    assert get_prospect_by_grant_channel("CNOPE") is None
+
+
+def test_nav_blocks_include_web_board_link(monkeypatch):
+    monkeypatch.setenv("CLEW_BOARD_SECRET", "test-secret")
+    from listeners.views.setup_prompt_builder import build_chat_nav_blocks
+
+    elements = build_chat_nav_blocks("T123")[0]["elements"]
+    board = next(e for e in elements if e["action_id"] == "clew_open_web_board")
+    assert "url" in board and "org=T123" in board["url"]
+
+    without_team = build_chat_nav_blocks()[0]["elements"]
+    assert all(e["action_id"] != "clew_open_web_board" for e in without_team)

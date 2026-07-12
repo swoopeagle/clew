@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type Prospect = {
   id: number;
@@ -125,14 +126,25 @@ function ProspectCard({
   );
 }
 
-export default function Home() {
+function Board() {
   const [data, setData] = useState<BoardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const org = searchParams.get("org") ?? "";
+  const sig = searchParams.get("sig") ?? "";
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/board", { cache: "no-store" });
+      const qs = new URLSearchParams();
+      if (org) qs.set("org", org);
+      if (sig) qs.set("sig", sig);
+      const res = await fetch(`/api/board?${qs}`, { cache: "no-store" });
+      if (res.status === 403) {
+        throw new Error(
+          "This board link isn't valid — grab a fresh link from Clew in your Slack (the 🌐 Web Board button).",
+        );
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `HTTP ${res.status}`);
@@ -143,7 +155,7 @@ export default function Home() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     }
-  }, []);
+  }, [org, sig]);
 
   useEffect(() => {
     load();
@@ -248,5 +260,13 @@ export default function Home() {
         same pipeline.
       </footer>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <Board />
+    </Suspense>
   );
 }
