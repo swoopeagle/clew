@@ -58,6 +58,62 @@ def build_grant_brief_blocks(data: dict, fallback_name: str = "") -> list[dict]:
             ],
         }
     )
+
+    # The three things a grant lead actually needs in hand: where to apply,
+    # what the rules are, who to email. Rendered only when research found them.
+    def _url(key: str) -> str | None:
+        v = data.get(key)
+        return v.strip() if isinstance(v, str) and v.startswith("http") else None
+
+    apply_url = _url("apply_url")
+    criteria_url = _url("criteria_url")
+    contact = data.get("contact")
+    action_lines = []
+    if apply_url:
+        action_lines.append(f":link: *Apply here:* <{apply_url}|{apply_url}>")
+    if criteria_url:
+        action_lines.append(
+            f":clipboard: *Criteria & guidelines:* <{criteria_url}|{criteria_url}>"
+        )
+    if isinstance(contact, str) and contact.strip():
+        c = contact.strip()
+        shown = f"<mailto:{c}|{c}>" if "@" in c and " " not in c else c
+        action_lines.append(f":mailbox_with_mail: *Contact:* {shown}")
+    if action_lines:
+        blocks.append(
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "\n".join(action_lines)},
+            }
+        )
+
+    if data.get("eligibility"):
+        blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": (
+                        "*:busts_in_silhouette: Who's eligible*\n"
+                        f"{_bullets(data['eligibility'], 5)}"
+                    ),
+                },
+            }
+        )
+    analysis = data.get("eligibility_analysis")
+    if isinstance(analysis, str) and analysis.strip():
+        blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": (
+                        "*:robot_face: Are we eligible? — Clew's analysis*\n"
+                        f"{analysis.strip()}"
+                    ),
+                },
+            }
+        )
     blocks.append({"type": "divider"})
 
     if data.get("confirmed"):

@@ -9,6 +9,7 @@ TOOL_STATUS = {
     "search_workspace": "🧵 Checking your workspace for warm paths…",
     "fetch_org_website": "🌐 Reading your website…",
     "fetch_webpage": "🌐 Reading the funder's site…",
+    "WebSearch": "🔎 Searching the web…",
     "save_org_profile": "💾 Saving your org profile…",
     "save_qualified_prospect": "✅ Posting a qualified prospect…",
     "assign_grant_task": "🧩 Designating a task…",

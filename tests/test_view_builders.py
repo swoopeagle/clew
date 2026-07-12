@@ -250,3 +250,71 @@ def test_channel_topic_truncates_long_grant_size():
         {"deadline_date": "2026-09-01", "grant_size": "$5k-$25k"}
     )
     assert short == "📅 Due 2026-09-01 · 💰 $5k-$25k · brief pinned"
+
+
+def test_extract_text_lists_links_absolute_and_mailto():
+    from agent.tools.website import _extract_text
+
+    html = """
+    <html><head><title>Bob Woodruff Foundation</title></head><body>
+      <nav><a href="/our-partners/grants-for-organizations/">Grants for Organizations</a></nav>
+      <p>We support <a href="https://example.org/veterans">veterans</a>.</p>
+      <a href="mailto:grants@bobwoodrufffoundation.org">Email the grants team</a>
+      <a href="#top">Back to top</a>
+      <a href="javascript:void(0)">Menu</a>
+      <script><a href="/never-seen">hidden</a></script>
+    </body></html>
+    """
+    title, _desc, text, links = _extract_text(
+        html, "https://bobwoodrufffoundation.org/home"
+    )
+    assert title == "Bob Woodruff Foundation"
+    assert "veterans" in text
+    joined = "\n".join(links)
+    assert (
+        "- Grants for Organizations: "
+        "https://bobwoodrufffoundation.org/our-partners/grants-for-organizations/"
+        in joined
+    )
+    assert "mailto:grants@bobwoodrufffoundation.org" in joined
+    assert "#top" not in joined
+    assert "javascript" not in joined
+    assert "never-seen" not in joined
+
+
+def test_grant_brief_renders_apply_criteria_contact_eligibility():
+    from listeners.views.grant_brief_builder import build_grant_brief_blocks
+
+    data = {
+        "funder": "Bob Woodruff Foundation",
+        "fit": "Direct veteran population match.",
+        "amount": "$25k-$100k",
+        "deadline": "Rolling",
+        "apply_url": "https://bobwoodrufffoundation.my.site.com/s/",
+        "criteria_url": "https://bobwoodrufffoundation.org/criteria/",
+        "contact": "grants@bobwoodrufffoundation.org",
+        "eligibility": ["501(c)(3) veteran-serving orgs", "National programs"],
+        "eligibility_analysis": "You appear eligible: veteran-serving 501(c)(3).",
+    }
+    text = str(build_grant_brief_blocks(data))
+    assert "https://bobwoodrufffoundation.my.site.com/s/" in text
+    assert "Criteria & guidelines" in text
+    assert "mailto:grants@bobwoodrufffoundation.org" in text
+    assert "Who's eligible" in text
+    assert "Are we eligible?" in text
+
+    # All-optional: an old-format brief renders without the new sections.
+    old = str(build_grant_brief_blocks({"funder": "X", "fit": "y"}))
+    assert "Apply here" not in old
+    assert "Are we eligible?" not in old
+
+
+def test_grant_brief_ignores_non_http_apply_url():
+    from listeners.views.grant_brief_builder import build_grant_brief_blocks
+
+    text = str(
+        build_grant_brief_blocks(
+            {"funder": "X", "apply_url": "null", "criteria_url": None}
+        )
+    )
+    assert "Apply here" not in text

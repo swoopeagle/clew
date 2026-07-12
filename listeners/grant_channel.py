@@ -23,12 +23,16 @@ from storage import update_prospect
 
 GRANT_BRIEF_PROMPT = """\
 We just approved this grant prospect and opened a dedicated channel for it. \
-Research the funder first: fetch its application_url and/or the funder's own \
-website with fetch_webpage (grants.gov detail pages may not render — use the \
-search tools' own data for those) and use your search tools, so the brief \
-carries the REAL apply link and deadline instead of "verify" placeholders \
-wherever they genuinely exist. Then produce a GRANT BRIEF as a SINGLE JSON \
-object and nothing else — no prose, no code fence. Use EXACTLY these keys:
+REQUIRED RESEARCH before writing anything (this is the whole point of the \
+brief): run your FUNDER RESEARCH LOOP — WebSearch the funder's name plus \
+"grants" / "apply" to find their OFFICIAL website (a ProPublica profile also \
+links it), fetch_webpage it, then follow the grants / eligibility / apply \
+links listed in the fetch output until you hold: the actual application \
+portal URL, the criteria/guidelines page, who is eligible, the deadline, and \
+a grants contact email. Two or three page hops is expected — do them. \
+(grants.gov detail pages may not render — use the search tools' own data for \
+those.) Then produce a GRANT BRIEF as a SINGLE JSON object and nothing else \
+— no prose, no code fence. Use EXACTLY these keys:
 
 {{
   "funder": "<funder / opportunity name>",
@@ -36,16 +40,23 @@ object and nothing else — no prose, no code fence. Use EXACTLY these keys:
   "amount": "<award size or range ONLY if a source supports it; else 'Verify on the funder's site'>",
   "deadline": "<deadline ONLY if a source supports it; else 'Verify on the funder's site'>",
   "deadline_date": "<the same deadline as machine-readable YYYY-MM-DD, or null if no source states one>",
+  "apply_url": "<the ACTUAL application page or portal URL you found, or null>",
+  "criteria_url": "<the grant guidelines / criteria page URL you found, or null>",
+  "contact": "<grants contact email or phone you found, or null>",
+  "eligibility": ["<who can apply, per the funder's stated criteria — short bullets>"],
+  "eligibility_analysis": "<2-3 sentences cross-referencing OUR org profile against those criteria: do we appear eligible, and what gaps must we close before applying>",
   "confirmed": ["<short facts you verified from sources — one line each>"],
-  "verify": ["<short items to confirm on the funder's site before applying>"],
+  "verify": ["<ONLY items your research loop genuinely failed to find>"],
   "next_steps": ["<2-3 short, concrete next actions>"],
   "sources": [{{"label": "<short label>", "url": "<url>"}}]
 }}
 
-Trust rules: never invent amounts, deadlines, or facts. Anything a source does \
-not support goes in "verify", never in "confirmed" or the amount/deadline \
-fields. If you found the application/portal page, put its link FIRST in \
-"sources" with the label "Apply here". Keep each bullet TELEGRAPHIC — a fragment of ~3-7 words, not a sentence \
+Trust rules: never invent amounts, deadlines, URLs, or facts. apply_url / \
+criteria_url must be URLs you actually saw in a fetch or search result — \
+null beats a guess. Anything a source does not support goes in "verify", \
+never in "confirmed" or the amount/deadline fields — but a brief that is \
+all "verify" means you skipped the research; that is a failure. Keep each \
+bullet TELEGRAPHIC — a fragment of ~3-7 words, not a sentence \
 (e.g. "Award size range", not "We still need to confirm the award size range"). \
 Output the JSON object only.
 
@@ -213,6 +224,21 @@ async def create_grant_channel(
                         await publish_home(client, user_id, team_id, user_token)
                     except Exception:
                         pass  # board refresh is nice-to-have here
+
+                # The researched portal beats a bare source link: point the
+                # 🌐 Grant Website button at where you actually apply.
+                apply_url = data.get("apply_url")
+                if (
+                    isinstance(apply_url, str)
+                    and apply_url.startswith(("http://", "https://"))
+                    and not prospect.get("application_url")
+                ):
+                    await asyncio.to_thread(
+                        update_prospect,
+                        prospect["id"],
+                        application_url=apply_url.strip(),
+                    )
+                    prospect["application_url"] = apply_url.strip()
                 posted = await client.chat_postMessage(
                     channel=channel_id,
                     text=f"Grant brief: {data.get('funder', prospect['name'])}",

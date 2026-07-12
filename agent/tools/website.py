@@ -4,7 +4,7 @@ Both share one robust fetch-and-extract core."""
 
 import re
 from html.parser import HTMLParser
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import aiohttp
 
@@ -12,6 +12,7 @@ from claude_agent_sdk import tool
 
 MAX_HTML_CHARS = 400_000
 MAX_TEXT_CHARS = 6_000
+MAX_LINKS = 40
 TIMEOUT = aiohttp.ClientTimeout(total=15)
 
 _SKIP_TAGS = {"script", "style", "noscript", "svg", "head"}
@@ -23,8 +24,11 @@ class _TextExtractor(HTMLParser):
         self.parts: list[str] = []
         self.title = ""
         self.meta_description = ""
+        self.links: list[tuple[str, str]] = []  # (anchor text, href)
         self._skip_depth = 0
         self._in_title = False
+        self._link_href: str | None = None
+        self._link_text: list[str] = []
 
     def handle_starttag(self, tag, attrs):
         if tag in _SKIP_TAGS and tag != "head":
@@ -35,35 +39,77 @@ class _TextExtractor(HTMLParser):
             attrs = dict(attrs)
             if attrs.get("name", "").lower() == "description":
                 self.meta_description = attrs.get("content", "")
+        if tag == "a" and not self._skip_depth:
+            href = dict(attrs).get("href") or ""
+            if href and not href.startswith(("#", "javascript:")):
+                self._link_href = href
+                self._link_text = []
 
     def handle_endtag(self, tag):
         if tag in _SKIP_TAGS and tag != "head" and self._skip_depth:
             self._skip_depth -= 1
         if tag == "title":
             self._in_title = False
+        if tag == "a" and self._link_href is not None:
+            label = " ".join(t for t in self._link_text if t)[:80]
+            self.links.append((label, self._link_href))
+            self._link_href = None
+            self._link_text = []
 
     def handle_data(self, data):
         if self._in_title:
             self.title += data
         elif not self._skip_depth and data.strip():
             self.parts.append(data.strip())
+            if self._link_href is not None:
+                self._link_text.append(data.strip())
 
 
-def _extract_text(html: str) -> tuple[str, str, str]:
+def _extract_text(html: str, base_url: str = "") -> tuple[str, str, str, list[str]]:
+    """Returns (title, meta description, page text, link lines). Links are
+    what let the agent NAVIGATE — from a funder's homepage to its grants
+    page to the actual application portal — and mailto links surface
+    contact emails."""
     parser = _TextExtractor()
     try:
         parser.feed(html)
     except Exception:
         pass
     text = re.sub(r"\s+", " ", " ".join(parser.parts))
-    return parser.title.strip(), parser.meta_description.strip(), text
+
+    link_lines: list[str] = []
+    seen: set[str] = set()
+    for label, href in parser.links:
+        absolute = urljoin(base_url, href) if base_url else href
+        scheme = urlparse(absolute).scheme
+        if scheme not in ("http", "https", "mailto"):
+            continue
+        absolute = absolute.split("#", 1)[0]
+        if not absolute or absolute in seen:
+            continue
+        seen.add(absolute)
+        link_lines.append(f"- {label or '(link)'}: {absolute}")
+        if len(link_lines) >= MAX_LINKS:
+            break
+    return parser.title.strip(), parser.meta_description.strip(), text, link_lines
 
 
-async def _fetch_html(url: str) -> str:
+# Nonprofit sites behind CDNs commonly 403 obvious bot user agents while
+# serving the same public pages to browsers — send browser-like headers.
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+
+async def _fetch_html(url: str) -> tuple[str, str]:
+    """Returns (html, final url after redirects — the right urljoin base)."""
     async with aiohttp.ClientSession(timeout=TIMEOUT) as session:
-        async with session.get(
-            url, headers={"User-Agent": "Clew grant assistant"}
-        ) as resp:
+        async with session.get(url, headers=_HEADERS) as resp:
             if resp.status != 200:
                 raise RuntimeError(f"HTTP {resp.status}")
             if int(resp.headers.get("Content-Length") or 0) > 5_000_000:
@@ -72,7 +118,7 @@ async def _fetch_html(url: str) -> str:
             # decompression and charset; low-level reads returned partial
             # bodies behind CDNs and broke extraction intermittently.
             html = await resp.text(errors="replace")
-            return html[:MAX_HTML_CHARS]
+            return html[:MAX_HTML_CHARS], str(resp.url)
 
 
 async def fetch_website_text(url: str) -> str:
@@ -89,11 +135,11 @@ async def fetch_website_text(url: str) -> str:
     last_error = ""
     for _ in range(2):
         try:
-            html = await _fetch_html(url)
+            html, final_url = await _fetch_html(url)
         except Exception as e:
             last_error = str(e)
             continue
-        title, description, text = _extract_text(html)
+        title, description, text, link_lines = _extract_text(html, final_url)
         if not (title or description or text):
             last_error = "no readable text on the page"
             continue
@@ -103,6 +149,12 @@ async def fetch_website_text(url: str) -> str:
         if description:
             summary_bits.append(f"META DESCRIPTION: {description}")
         summary_bits.append(f"PAGE TEXT:\n{text[:MAX_TEXT_CHARS]}")
+        if link_lines:
+            summary_bits.append(
+                "LINKS ON THIS PAGE (follow the relevant ones with "
+                "fetch_webpage; mailto links are contact addresses):\n"
+                + "\n".join(link_lines)
+            )
         return "\n".join(summary_bits)
 
     return f"Could not fetch {url} ({last_error})."

@@ -16,10 +16,12 @@ from listeners.views.agent_message import build_agent_message_blocks
 from storage import get_prospect
 
 DRAFT_APPLICATION_PROMPT = """\
-Help us apply for this approved grant prospect. RESEARCH FIRST: fetch the \
-prospect's application_url and the funder's own website with fetch_webpage \
-(plus your search tools) to find the actual application portal, current \
-deadline, and stated requirements — do NOT skip this step. Then produce your \
+Help us apply for this approved grant prospect. RESEARCH FIRST — run your \
+FUNDER RESEARCH LOOP: WebSearch the funder if you don't have their site, \
+fetch_webpage the prospect's application_url and/or the funder's own \
+website, and follow the grants/apply links in the fetch output to find the \
+actual application portal, current deadline, and stated requirements — do \
+NOT skip this step. Then produce your \
 APPLICATION HELP deliverable, and START it with "🔗 Apply here:" giving the \
 exact application URL and confirmed deadline (or, if you truly couldn't find \
 the portal after fetching, say which pages you checked). Follow with: fit \
