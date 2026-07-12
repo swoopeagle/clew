@@ -101,7 +101,19 @@ or "Ian's machine is authoritative" is **obsolete**. Current truth:
      shimmer skeleton while loading, pulsing Live indicator, full dark mode,
      `prefers-reduced-motion` respected, tagline removed. Zero new deps;
      web/ only (no bot deploy involved).
-- Tests: **62 green.**
+  8. **Final wow bundle (Sun evening, from the rubric deep-dive)** — tasks now
+     surface EVERYWHERE: the morning briefing lists each grant's open/unassigned
+     task counts with war-room links; App Home shows a "🧩 N tasks in flight"
+     line under the funnel; and the 9am pass (plus on-demand `clew briefing`)
+     posts **nudges INTO war rooms** when a deadline is ≤3 days or tasks sit
+     unowned — channel @-mentions ping the assignees (DMs can't). App Home also
+     gained a "📊 What Clew has done for you" impact panel computed live from
+     the DB (prospects researched, citations verified, war rooms opened, tasks
+     handed off, est. staff-hours saved). The web board renders 🧩 done/total
+     task chips per card (board API now ships per-prospect task counts).
+     **VIDEO NOTE: fire `clew briefing` on camera — briefing lands in the DM
+     AND nudges pop into war rooms simultaneously. Best cold open we have.**
+- Tests: **67 green.**
 
 ## 0. TL;DR
 
