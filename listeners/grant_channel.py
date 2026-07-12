@@ -14,17 +14,32 @@ from slack_sdk.web.async_client import AsyncWebClient
 from agent import AgentDeps, run_agent
 from agent.org_context import prepend_org_profile
 from listeners.events.tool_status import status_for
+from listeners.views.grant_brief_builder import (
+    build_grant_brief_blocks,
+    parse_brief_json,
+)
 from storage import update_prospect
 
 GRANT_BRIEF_PROMPT = """\
 We just approved this grant prospect and opened a dedicated channel for it. \
-Post a GRANT BRIEF for the team: (1) a plain-language summary of the funder/\
-opportunity and why it fits us, (2) the award amount or range — only if \
-supported by evidence, otherwise "VERIFY on the funder's site", (3) the \
-deadline (same rule), (4) eligibility and application requirements you can \
-verify, with everything unverified in a clearly-marked VERIFY list, and (5) \
-suggested next steps. Research the funder with your search tools first. \
-Keep it tight — this pins to the top of the channel.
+Research the funder with your search tools first, then produce a GRANT BRIEF as \
+a SINGLE JSON object and nothing else — no prose, no code fence. Use EXACTLY \
+these keys:
+
+{{
+  "funder": "<funder / opportunity name>",
+  "fit": "<one sentence: why this fits us>",
+  "amount": "<award size or range ONLY if a source supports it; else 'Verify on the funder's site'>",
+  "deadline": "<deadline ONLY if a source supports it; else 'Verify on the funder's site'>",
+  "confirmed": ["<short facts you verified from sources — one line each>"],
+  "verify": ["<short items to confirm on the funder's site before applying>"],
+  "next_steps": ["<2-3 short, concrete next actions>"],
+  "sources": [{{"label": "<short label>", "url": "<url>"}}]
+}}
+
+Trust rules: never invent amounts, deadlines, or facts. Anything a source does \
+not support goes in "verify", never in "confirmed" or the amount/deadline \
+fields. Keep every bullet to one short line. Output the JSON object only.
 
 PROSPECT:
 {prospect_json}
@@ -137,7 +152,16 @@ async def create_grant_channel(
             ),
         )
         if brief:
-            posted = await client.chat_postMessage(channel=channel_id, text=brief)
+            data = parse_brief_json(brief)
+            if data:
+                posted = await client.chat_postMessage(
+                    channel=channel_id,
+                    text=f"Grant brief: {data.get('funder', prospect['name'])}",
+                    blocks=build_grant_brief_blocks(data, fallback_name=prospect["name"]),
+                )
+            else:
+                # Parsing failed — post the raw text so a brief always lands.
+                posted = await client.chat_postMessage(channel=channel_id, text=brief)
             try:
                 await client.pins_add(channel=channel_id, timestamp=posted["ts"])
             except SlackApiError:
