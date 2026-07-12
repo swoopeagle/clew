@@ -1,148 +1,123 @@
-<svg viewBox="0 0 1180 760" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<svg viewBox="0 0 1120 760" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a8a9a"/>
     </marker>
-    <marker id="arrowDashed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#a0aec0"/>
-    </marker>
+    <style>
+      .title { font-size: 27px; font-weight: 700; fill: #17173a; }
+      .sub   { font-size: 14px; fill: #5b5b6b; }
+      .hdr   { font-size: 15px; font-weight: 700; }
+      .chiptxt { font-size: 12.5px; fill: #22223b; }
+      .small { font-size: 11.5px; fill: #22223b; }
+      .note  { font-size: 12.5px; fill: #7a5a10; font-weight: 600; }
+      .flowlbl { font-size: 11.5px; fill: #7b7b8b; }
+      .flow  { stroke: #8a8a9a; stroke-width: 2; fill: none; }
+    </style>
   </defs>
 
-  <rect x="0" y="0" width="1180" height="760" fill="#ffffff"/>
+  <rect x="0" y="0" width="1120" height="760" fill="#ffffff"/>
+  <text x="40" y="42" class="title">Clew — architecture</text>
+  <text x="40" y="66" class="sub">Slack-native grant agent · Claude Agent SDK + a custom MCP server over free public data</text>
 
-  <text x="30" y="38" font-size="24" font-weight="700" fill="#1a202c">Clew — architecture</text>
-  <text x="30" y="60" font-size="13" fill="#718096">Slack Agent Builder Challenge — Agent for Good</text>
-
-  <!-- Slack Workspace -->
-  <rect x="30" y="90" width="270" height="230" rx="10" fill="#f7fafc" stroke="#cbd5e0" stroke-width="1.5"/>
-  <text x="50" y="118" font-size="15" font-weight="700" fill="#2d3748">Slack Workspace</text>
-
-  <rect x="50" y="134" width="230" height="46" rx="6" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="65" y="153" font-size="12.5" fill="#2d3748">App Home — org profile,</text>
-  <text x="65" y="168" font-size="12.5" fill="#2d3748">Find Grants button, Grant Board</text>
-
-  <rect x="50" y="188" width="230" height="36" rx="6" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="65" y="211" font-size="12.5" fill="#2d3748">DM / @mention (natural language)</text>
-
-  <rect x="50" y="232" width="230" height="60" rx="6" fill="#ebf8ff" stroke="#90cdf4"/>
-  <text x="65" y="252" font-size="12.5" font-weight="700" fill="#2c5282">Shortlist Card (Block Kit)</text>
-  <text x="65" y="268" font-size="12" fill="#2c5282">fit rationale + cited sources</text>
-  <text x="65" y="282" font-size="12" fill="#2c5282">[ Approve ]   [ Pass ]  ← human gate</text>
-
-  <!-- Bolt App -->
-  <rect x="350" y="90" width="230" height="120" rx="10" fill="#f7fafc" stroke="#cbd5e0" stroke-width="1.5"/>
-  <text x="370" y="118" font-size="15" font-weight="700" fill="#2d3748">Bolt for Python</text>
-  <text x="370" y="138" font-size="12.5" fill="#4a5568">Socket Mode</text>
-  <text x="370" y="158" font-size="12.5" fill="#4a5568">listeners/events</text>
-  <text x="370" y="176" font-size="12.5" fill="#4a5568">listeners/actions</text>
-  <text x="370" y="194" font-size="12.5" fill="#4a5568">listeners/views</text>
-
-  <!-- Claude Agent SDK -->
-  <rect x="350" y="250" width="230" height="120" rx="10" fill="#faf5ff" stroke="#d6bcfa" stroke-width="1.5"/>
-  <text x="370" y="278" font-size="15" font-weight="700" fill="#44337a">Claude Agent SDK</text>
-  <text x="370" y="300" font-size="12.5" fill="#553c9a">agent/agent.py</text>
-  <text x="370" y="318" font-size="12" fill="#553c9a">system prompt: screen for real</text>
-  <text x="370" y="333" font-size="12" fill="#553c9a">fit, cite sources, flag doubt,</text>
-  <text x="370" y="348" font-size="12" fill="#553c9a">never fabricate</text>
-
-  <!-- MCP Server -->
-  <rect x="660" y="90" width="280" height="330" rx="10" fill="#fffaf0" stroke="#fbd38d" stroke-width="1.5"/>
-  <text x="680" y="118" font-size="15" font-weight="700" fill="#7b341e">MCP Server — clew-grant-tools</text>
-  <text x="680" y="136" font-size="11.5" fill="#975a16">(required tech: MCP server integration)</text>
-
-  <rect x="680" y="150" width="240" height="30" rx="5" fill="#ffffff" stroke="#f6ad55"/>
-  <text x="692" y="170" font-size="12" fill="#2d3748">search_grants_gov</text>
-
-  <rect x="680" y="186" width="240" height="30" rx="5" fill="#ffffff" stroke="#f6ad55"/>
-  <text x="692" y="206" font-size="12" fill="#2d3748">search_propublica_orgs</text>
-
-  <rect x="680" y="222" width="240" height="30" rx="5" fill="#ffffff" stroke="#f6ad55"/>
-  <text x="692" y="242" font-size="12" fill="#2d3748">get_990_filings</text>
-
-  <rect x="680" y="258" width="240" height="30" rx="5" fill="#ffffff" stroke="#f6ad55"/>
-  <text x="692" y="278" font-size="12" fill="#2d3748">search_usaspending</text>
-
-  <rect x="680" y="294" width="240" height="30" rx="5" fill="#ffffff" stroke="#a0aec0" stroke-dasharray="3,2"/>
-  <text x="692" y="314" font-size="12" fill="#4a5568">search_workspace (Real-Time Search)</text>
-
-  <rect x="680" y="336" width="240" height="66" rx="6" fill="#c6f6d5" stroke="#68d391"/>
-  <text x="692" y="356" font-size="12.5" font-weight="700" fill="#22543d">save_qualified_prospect</text>
-  <text x="692" y="372" font-size="11.5" fill="#22543d">trust boundary — requires a real</text>
-  <text x="692" y="386" font-size="11.5" fill="#22543d">citation for every claim</text>
-
-  <!-- External APIs -->
-  <rect x="1000" y="90" width="150" height="330" rx="10" fill="#f0fff4" stroke="#9ae6b4" stroke-width="1.5"/>
-  <text x="1015" y="115" font-size="13" font-weight="700" fill="#22543d">Free public APIs</text>
-
-  <rect x="1015" y="150" width="120" height="30" rx="5" fill="#ffffff" stroke="#9ae6b4"/>
-  <text x="1025" y="170" font-size="11" fill="#2d3748">Grants.gov</text>
-
-  <rect x="1015" y="196" width="120" height="46" rx="5" fill="#ffffff" stroke="#9ae6b4"/>
-  <text x="1025" y="214" font-size="11" fill="#2d3748">ProPublica</text>
-  <text x="1025" y="228" font-size="11" fill="#2d3748">Nonprofit Explorer</text>
-
-  <rect x="1015" y="258" width="120" height="30" rx="5" fill="#ffffff" stroke="#9ae6b4"/>
-  <text x="1025" y="278" font-size="11" fill="#2d3748">USAspending.gov</text>
-
-  <rect x="1015" y="294" width="120" height="30" rx="5" fill="#ffffff" stroke="#a0aec0" stroke-dasharray="3,2"/>
-  <text x="1022" y="314" font-size="10.5" fill="#4a5568">Slack workspace</text>
-
-  <!-- SQLite -->
-  <rect x="350" y="430" width="280" height="110" rx="10" fill="#ebf4ff" stroke="#a3bffa" stroke-width="1.5"/>
-  <text x="370" y="458" font-size="15" font-weight="700" fill="#2a4365">SQLite — storage/db.py</text>
-  <text x="370" y="480" font-size="12" fill="#2c5282">org_profile</text>
-  <text x="370" y="498" font-size="12" fill="#2c5282">prospects (single source of truth —</text>
-  <text x="370" y="514" font-size="12" fill="#2c5282">stage machine drives every view)</text>
-
-  <!-- Lifecycle stages strip -->
-  <rect x="30" y="580" width="1120" height="150" rx="10" fill="#f7fafc" stroke="#cbd5e0" stroke-width="1.5"/>
-  <text x="50" y="608" font-size="15" font-weight="700" fill="#2d3748">Grant Board — one table, one stage machine</text>
-
-  <g font-size="12" fill="#2d3748">
-    <rect x="50" y="626" width="130" height="40" rx="6" fill="#fff" stroke="#cbd5e0"/>
-    <text x="60" y="650" font-size="12">qualified</text>
-
-    <rect x="200" y="626" width="130" height="40" rx="6" fill="#fff" stroke="#cbd5e0"/>
-    <text x="210" y="650" font-size="12">approved</text>
-    <text x="210" y="663" font-size="10" fill="#718096">+ deadline</text>
-
-    <rect x="350" y="626" width="130" height="40" rx="6" fill="#fff" stroke="#cbd5e0"/>
-    <text x="360" y="650" font-size="12">applied</text>
-
-    <rect x="500" y="626" width="130" height="40" rx="6" fill="#fff" stroke="#cbd5e0"/>
-    <text x="510" y="650" font-size="12">submitted</text>
-
-    <rect x="650" y="626" width="150" height="40" rx="6" fill="#c6f6d5" stroke="#68d391"/>
-    <text x="660" y="650" font-size="12">awarded</text>
-    <text x="660" y="663" font-size="10" fill="#22543d">+ report due date</text>
-
-    <rect x="820" y="626" width="130" height="40" rx="6" fill="#fed7d7" stroke="#fc8181"/>
-    <text x="830" y="650" font-size="12">declined</text>
-
-    <rect x="970" y="626" width="130" height="40" rx="6" fill="#fff" stroke="#cbd5e0"/>
-    <text x="980" y="650" font-size="12">passed</text>
+  <!-- Layer 1: Slack surfaces -->
+  <rect x="40" y="86" width="1040" height="104" rx="14" fill="#f4eaf5" stroke="#6b2b6f" stroke-width="1.5"/>
+  <text x="58" y="110" class="hdr" fill="#6b2b6f">① People in Slack</text>
+  <g>
+    <rect x="58" y="126" width="190" height="46" rx="8" fill="#ffffff" stroke="#6b2b6f" stroke-width="1.1"/>
+    <text x="153" y="154" class="chiptxt" text-anchor="middle">Assistant DM</text>
+    <rect x="262" y="126" width="190" height="46" rx="8" fill="#ffffff" stroke="#6b2b6f" stroke-width="1.1"/>
+    <text x="357" y="154" class="chiptxt" text-anchor="middle">@mention in channels</text>
+    <rect x="466" y="126" width="190" height="46" rx="8" fill="#ffffff" stroke="#6b2b6f" stroke-width="1.1"/>
+    <text x="561" y="154" class="chiptxt" text-anchor="middle">App Home · board</text>
+    <rect x="670" y="126" width="190" height="46" rx="8" fill="#ffffff" stroke="#6b2b6f" stroke-width="1.1"/>
+    <text x="765" y="154" class="chiptxt" text-anchor="middle">#grant-… war rooms</text>
+    <rect x="874" y="126" width="188" height="46" rx="8" fill="#ffffff" stroke="#6b2b6f" stroke-width="1.1"/>
+    <text x="968" y="154" class="chiptxt" text-anchor="middle">Block Kit cards &amp; modals</text>
   </g>
-  <text x="50" y="700" font-size="11.5" fill="#718096">awarded / declined transitions both open an org-learning retro modal — captures why, for next time</text>
-  <text x="50" y="716" font-size="11.5" fill="#718096">(warm-path hint from search_workspace shown when OAuth is connected)</text>
 
-  <!-- Arrows -->
-  <line x1="300" y1="152" x2="350" y2="140" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="300" y1="206" x2="350" y2="160" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="350" y1="310" x2="300" y2="262" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="300" y1="190" x2="300" y2="212" class="flow" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="312" y="205" class="flowlbl">events ↓ · Block Kit UI ↑</text>
 
-  <line x1="580" y1="150" x2="660" y2="150" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="580" y1="310" x2="660" y2="200" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Layer 2: Bolt app -->
+  <rect x="40" y="212" width="1040" height="94" rx="14" fill="#e6f7f2" stroke="#158a70" stroke-width="1.5"/>
+  <text x="58" y="236" class="hdr" fill="#158a70">② Clew · Bolt for Python (Socket Mode + OAuth)</text>
+  <rect x="58" y="248" width="496" height="46" rx="8" fill="#ffffff" stroke="#158a70" stroke-width="1.1"/>
+  <text x="306" y="276" class="chiptxt" text-anchor="middle">Event &amp; action listeners</text>
+  <rect x="568" y="248" width="494" height="46" rx="8" fill="#ffffff" stroke="#158a70" stroke-width="1.1"/>
+  <text x="815" y="276" class="chiptxt" text-anchor="middle">Block Kit builders — cards · brief · funnel board · trust panel</text>
 
-  <line x1="920" y1="165" x2="1000" y2="165" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="920" y1="201" x2="1000" y2="219" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="920" y1="237" x2="1000" y2="219" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="920" y1="273" x2="1000" y2="273" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="920" y1="309" x2="1000" y2="309" stroke="#a0aec0" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowDashed)"/>
+  <line x1="300" y1="306" x2="300" y2="330" class="flow" marker-end="url(#arr)"/>
 
-  <line x1="800" y1="402" x2="465" y2="430" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="465" y1="210" x2="465" y2="250" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <line x1="440" y1="430" x2="440" y2="220" stroke="#4a5568" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
-  <text x="446" y="330" font-size="10.5" fill="#718096">board reads / org profile CRUD</text>
+  <!-- Layer 3: Agent SDK (left) -->
+  <rect x="40" y="330" width="560" height="102" rx="14" fill="#e8f0fe" stroke="#3157b8" stroke-width="1.5"/>
+  <text x="58" y="354" class="hdr" fill="#3157b8">③ Claude Agent SDK · Opus 4.8</text>
+  <rect x="58" y="368" width="250" height="46" rx="8" fill="#ffffff" stroke="#3157b8" stroke-width="1.1"/>
+  <text x="183" y="396" class="chiptxt" text-anchor="middle">Per-thread sessions</text>
+  <rect x="322" y="368" width="262" height="46" rx="8" fill="#ffffff" stroke="#3157b8" stroke-width="1.1"/>
+  <text x="453" y="390" class="small" text-anchor="middle">🔒 Lockdown: built-in</text>
+  <text x="453" y="406" class="small" text-anchor="middle">fs / shell / web tools disallowed</text>
 
-  <line x1="490" y1="540" x2="490" y2="580" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- SQLite (right of SDK) -->
+  <rect x="620" y="330" width="196" height="102" rx="14" fill="#f0eefb" stroke="#6a4fb0" stroke-width="1.5"/>
+  <text x="636" y="354" class="hdr" fill="#6a4fb0">SQLite</text>
+  <text x="636" y="378" class="small">clew.db</text>
+  <text x="636" y="396" class="small">org profile +</text>
+  <text x="636" y="412" class="small">prospect pipeline</text>
+  <line x1="600" y1="381" x2="618" y2="381" class="flow" marker-start="url(#arr)" marker-end="url(#arr)"/>
+
+  <!-- Web board (far right) -->
+  <rect x="836" y="330" width="244" height="102" rx="14" fill="#eafaf0" stroke="#2a9d55" stroke-width="1.5"/>
+  <text x="852" y="354" class="hdr" fill="#2a9d55">Web board</text>
+  <text x="852" y="376" class="small">webapi :3001 (bearer)</text>
+  <text x="852" y="394" class="small">→ cloudflared → Vercel / Next.js</text>
+  <text x="852" y="412" class="small">signed per-org HMAC links</text>
+  <line x1="816" y1="381" x2="834" y2="381" class="flow" marker-end="url(#arr)"/>
+
+  <line x1="300" y1="432" x2="300" y2="466" class="flow" marker-end="url(#arr)"/>
+  <text x="312" y="452" class="flowlbl">tool calls</text>
+
+  <!-- Layer 4: MCP server -->
+  <rect x="40" y="466" width="1040" height="158" rx="14" fill="#fdf3e0" stroke="#c9821b" stroke-width="1.5"/>
+  <text x="58" y="490" class="hdr" fill="#c9821b">④ Custom MCP server · clew-grant-tools (9 tools)</text>
+  <!-- row 1 -->
+  <g class="small">
+    <rect x="58" y="502" width="190" height="30" rx="7" fill="#ffffff" stroke="#c9821b" stroke-width="1"/>
+    <text x="153" y="522" text-anchor="middle">search_grants_gov</text>
+    <rect x="262" y="502" width="190" height="30" rx="7" fill="#ffffff" stroke="#c9821b" stroke-width="1"/>
+    <text x="357" y="522" text-anchor="middle">search_propublica_orgs</text>
+    <rect x="466" y="502" width="190" height="30" rx="7" fill="#ffffff" stroke="#c9821b" stroke-width="1"/>
+    <text x="561" y="522" text-anchor="middle">get_990_filings</text>
+    <rect x="670" y="502" width="190" height="30" rx="7" fill="#ffffff" stroke="#c9821b" stroke-width="1"/>
+    <text x="765" y="522" text-anchor="middle">search_usaspending</text>
+    <rect x="874" y="502" width="188" height="30" rx="7" fill="#ffffff" stroke="#c9821b" stroke-width="1"/>
+    <text x="968" y="522" text-anchor="middle">get_org_award_history</text>
+  </g>
+  <!-- row 2 -->
+  <g class="small">
+    <rect x="58" y="540" width="242" height="30" rx="7" fill="#ffffff" stroke="#c9821b" stroke-width="1"/>
+    <text x="179" y="560" text-anchor="middle">search_workspace · Real-Time Search</text>
+    <rect x="314" y="540" width="242" height="30" rx="7" fill="#fff3ce" stroke="#d9a521" stroke-width="1.8"/>
+    <text x="435" y="560" text-anchor="middle" font-weight="700">⭐ save_qualified_prospect</text>
+    <rect x="570" y="540" width="242" height="30" rx="7" fill="#ffffff" stroke="#c9821b" stroke-width="1"/>
+    <text x="691" y="560" text-anchor="middle">save_org_profile</text>
+    <rect x="826" y="540" width="236" height="30" rx="7" fill="#ffffff" stroke="#c9821b" stroke-width="1"/>
+    <text x="944" y="560" text-anchor="middle">fetch_org_website</text>
+  </g>
+  <text x="560" y="600" class="note" text-anchor="middle">🔒 save_qualified_prospect is the ONLY path to the shortlist — it rejects any prospect whose citations aren't real source URLs. No citation, no shortlist.</text>
+
+  <line x1="300" y1="624" x2="300" y2="652" class="flow" marker-end="url(#arr)"/>
+
+  <!-- Layer 5: data sources -->
+  <rect x="40" y="652" width="1040" height="76" rx="14" fill="#eef1f4" stroke="#556173" stroke-width="1.5"/>
+  <text x="58" y="678" class="hdr" fill="#556173">⑤ Free, keyless data sources</text>
+  <g class="small">
+    <rect x="330" y="683" width="164" height="30" rx="7" fill="#ffffff" stroke="#556173" stroke-width="1"/>
+    <text x="412" y="703" text-anchor="middle">Grants.gov</text>
+    <rect x="506" y="683" width="164" height="30" rx="7" fill="#ffffff" stroke="#556173" stroke-width="1"/>
+    <text x="588" y="703" text-anchor="middle">ProPublica 990</text>
+    <rect x="682" y="683" width="164" height="30" rx="7" fill="#ffffff" stroke="#556173" stroke-width="1"/>
+    <text x="764" y="703" text-anchor="middle">USAspending</text>
+    <rect x="858" y="683" width="204" height="30" rx="7" fill="#ffffff" stroke="#556173" stroke-width="1"/>
+    <text x="960" y="703" text-anchor="middle">Slack workspace search</text>
+  </g>
 </svg>
