@@ -34,6 +34,7 @@ type BoardData = {
   } | null;
   board: Record<string, Prospect[]>;
   pipeline: Record<string, number>;
+  tasks?: Record<string, { open: number; done: number }>;
   generated_at: string;
 };
 
@@ -173,24 +174,34 @@ function ProspectCard({
   prospect,
   stage,
   index,
+  taskCounts,
 }: {
   prospect: Prospect;
   stage: string;
   index: number;
+  taskCounts?: { open: number; done: number };
 }) {
   const sources = parseSources(prospect.fit_sources);
   const days = stage === "approved" ? daysUntil(prospect.deadline_date) : null;
   const dueSoon = days !== null && days >= 0 && days <= 7;
+  const totalTasks = (taskCounts?.open ?? 0) + (taskCounts?.done ?? 0);
 
   return (
     <article className="card rise" style={delayStyle(index)}>
       <h4>{prospect.name}</h4>
-      {prospect.deadline_date && stage === "approved" && (
+      {((prospect.deadline_date && stage === "approved") || totalTasks > 0) && (
         <p className="chip-row">
-          <span className={dueSoon ? "chip chip-urgent" : "chip chip-date"}>
-            {dueSoon ? "⏰" : "📅"} {prospect.deadline_date}
-            {days !== null && days >= 0 && ` · ${days}d left`}
-          </span>
+          {prospect.deadline_date && stage === "approved" && (
+            <span className={dueSoon ? "chip chip-urgent" : "chip chip-date"}>
+              {dueSoon ? "⏰" : "📅"} {prospect.deadline_date}
+              {days !== null && days >= 0 && ` · ${days}d left`}
+            </span>
+          )}
+          {totalTasks > 0 && (
+            <span className="chip chip-tasks">
+              🧩 {taskCounts!.done}/{totalTasks} tasks
+            </span>
+          )}
         </p>
       )}
       {prospect.grant_size && <p className="meta">💰 {prospect.grant_size}</p>}
@@ -393,6 +404,7 @@ function Board() {
                         prospect={p}
                         stage={key}
                         index={i}
+                        taskCounts={data?.tasks?.[String(p.id)]}
                       />
                     ))
                   )}

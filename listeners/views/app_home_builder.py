@@ -1,3 +1,5 @@
+import json
+
 from listeners.views.board_builder import build_board_blocks
 
 # The pipeline funnel shown at the top of the board — stage, emoji, short label.
@@ -102,6 +104,47 @@ def _tasks_in_flight(open_tasks: list[dict]) -> str | None:
     return text
 
 
+def _impact_block(board: dict[str, list[dict]], total_tasks: int) -> dict | None:
+    """Impact evidence, computed live from the pipeline: what the agent has
+    actually done for this org. The hours figure is a labeled estimate —
+    honesty is the brand."""
+    prospects = [p for rows in board.values() for p in rows]
+    if not prospects:
+        return None
+    citations = 0
+    for p in prospects:
+        try:
+            citations += len(json.loads(p.get("fit_sources") or "[]"))
+        except (ValueError, TypeError):
+            pass
+    war_rooms = sum(1 for p in prospects if p.get("grant_channel_id"))
+    hours = round(len(prospects) * 2.5)
+
+    parts = [
+        f"researched *{len(prospects)} prospect{'s' if len(prospects) != 1 else ''}*",
+        f"verified *{citations} citation{'s' if citations != 1 else ''}*",
+    ]
+    if war_rooms:
+        parts.append(
+            f"opened *{war_rooms} war room{'s' if war_rooms != 1 else ''}*"
+        )
+    if total_tasks:
+        parts.append(
+            f"handed off *{total_tasks} task{'s' if total_tasks != 1 else ''}*"
+        )
+    return {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": (
+                ":bar_chart: *What Clew has done for you*\n"
+                f"{', '.join(parts)} — roughly *~{hours} hours* of grant-research "
+                "staff work (est. 2.5 hrs per researched prospect)."
+            ),
+        },
+    }
+
+
 def _visibility_block(visible: dict) -> dict:
     """Trust/observability section: exactly which spaces Clew can see, queried
     live from Slack. Reinforces that Clew only reads what it's invited to."""
@@ -135,6 +178,7 @@ def build_app_home_view(
     team_id: str | None = None,
     visible_channels: dict | None = None,
     open_tasks: list[dict] | None = None,
+    total_tasks: int = 0,
 ) -> dict:
     """Build the App Home Block Kit view: hero, org profile summary (or
     onboarding steps), action buttons, pipeline summary, and the grant board.
@@ -271,6 +315,9 @@ def build_app_home_view(
     blocks.extend(build_board_blocks(board, workspace_url=workspace_url))
 
     blocks.append({"type": "divider"})
+    impact = _impact_block(board, total_tasks)
+    if impact:
+        blocks.append(impact)
     if visible_channels is not None:
         blocks.append(_visibility_block(visible_channels))
     blocks.append(

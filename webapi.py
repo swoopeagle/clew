@@ -13,7 +13,12 @@ from datetime import datetime, timezone
 
 from aiohttp import web
 
-from storage import get_org_profile, get_prospects_grouped_by_stage, list_org_ids
+from storage import (
+    count_tasks_by_prospect,
+    get_org_profile,
+    get_prospects_grouped_by_stage,
+    list_org_ids,
+)
 
 STAGES = (
     "qualified",
@@ -53,12 +58,15 @@ async def handle_board(request: web.Request) -> web.Response:
     team_id = request.query.get("team", "") or await _default_team_id()
     profile = await asyncio.to_thread(get_org_profile, team_id)
     grouped = await asyncio.to_thread(get_prospects_grouped_by_stage, team_id)
+    tasks = await asyncio.to_thread(count_tasks_by_prospect, team_id)
 
     return web.json_response(
         {
             "org_profile": profile,
             "board": {stage: grouped.get(stage, []) for stage in STAGES},
             "pipeline": {stage: len(grouped.get(stage, [])) for stage in STAGES},
+            # keys stringified: JSON objects can't have int keys
+            "tasks": {str(pid): counts for pid, counts in tasks.items()},
             "generated_at": datetime.now(timezone.utc).isoformat(),
         }
     )

@@ -426,6 +426,13 @@ main {
   animation: urgent-breathe 2.4s ease-in-out infinite;
 }
 
+.chip-tasks {
+  background: var(--gold-soft);
+  border-color: transparent;
+  color: var(--gold);
+  font-weight: 600;
+}
+
 a.chip-source {
   background: var(--surface);
   color: var(--brand);

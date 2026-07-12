@@ -318,3 +318,27 @@ def test_grant_brief_ignores_non_http_apply_url():
         )
     )
     assert "Apply here" not in text
+
+
+def test_impact_block_computes_from_board():
+    from listeners.views.app_home_builder import _impact_block
+
+    board = {
+        "qualified": [
+            {"id": 1, "fit_sources": '["https://a", "https://b"]'},
+        ],
+        "approved": [
+            {"id": 2, "fit_sources": '["https://c"]', "grant_channel_id": "C1"},
+        ],
+        "passed": [{"id": 3, "fit_sources": None}],
+    }
+    block = _impact_block(board, total_tasks=4)
+    text = block["text"]["text"]
+    assert "3 prospects" in text
+    assert "3 citations" in text
+    assert "1 war room" in text
+    assert "4 tasks" in text
+    assert "est." in text
+    assert "~8 hours" in text  # 3 * 2.5 rounded
+
+    assert _impact_block({"qualified": []}, total_tasks=0) is None

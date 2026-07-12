@@ -6,6 +6,7 @@ from slack_sdk.web.async_client import AsyncWebClient
 
 from listeners.views.app_home_builder import build_app_home_view
 from storage import (
+    count_tasks_by_prospect,
     get_org_profile,
     get_prospects_grouped_by_stage,
     list_open_tasks_by_org,
@@ -60,6 +61,8 @@ async def publish_home(
     org_profile = await asyncio.to_thread(get_org_profile, team_id)
     board = await asyncio.to_thread(get_prospects_grouped_by_stage, team_id)
     open_tasks = await asyncio.to_thread(list_open_tasks_by_org, team_id)
+    task_counts = await asyncio.to_thread(count_tasks_by_prospect, team_id)
+    total_tasks = sum(c["open"] + c["done"] for c in task_counts.values())
 
     view = build_app_home_view(
         org_profile=org_profile,
@@ -70,5 +73,6 @@ async def publish_home(
         team_id=team_id,
         visible_channels=await _get_visible_channels(client),
         open_tasks=open_tasks,
+        total_tasks=total_tasks,
     )
     await client.views_publish(user_id=user_id, view=view)
