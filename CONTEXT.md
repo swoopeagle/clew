@@ -1,9 +1,42 @@
 # CONTEXT.md — Clew: current state & the road to submission
 
-_Last updated: **Saturday July 11, 2026, late night — second session** (Ian + Claude).
-This supersedes the prior handoff. Read top to bottom before touching anything._
+_Last updated: **Sunday July 12, 2026, afternoon** (Jay + Claude — cloud cutover).
+Read §0a FIRST — it changes several things stated lower in this doc._
 
 ---
+
+## 0a. ☁️ SUNDAY UPDATE — Clew now runs on Railway. Laptops are retired.
+
+Everything below this section that talks about laptops, tunnels, `run_clew.sh`,
+or "Ian's machine is authoritative" is **obsolete**. Current truth:
+
+- **Production host:** Railway (Jay's account, project `clew`), permanent URL
+  **https://clew-production.up.railway.app** — one domain serves the Socket-Mode
+  bot + OAuth (`/slack/install`, `/slack/oauth_redirect`) + the board API
+  (`/api/board`). Dockerized (`Dockerfile` + `entrypoint.sh`); volume at
+  `/app/data` holds `clew.db` + OAuth installs, so state survives every deploy.
+  A non-root user is REQUIRED in the container — the agent CLI refuses
+  bypassPermissions as root (this bit us; the entrypoint handles it).
+- **⚠️ IAN: the app-level token was REGENERATED during cutover** to lock the
+  sleeping laptop out cleanly. Your local `.env`'s `xapp-…` is dead and
+  `run_clew.sh` will fail auth — expected, just stop it. **Do NOT regenerate any
+  tokens to "fix" it** (that would kill the Railway host). Need local dev? Get
+  the current values from Jay or the Railway dashboard.
+- **OAuth / Real-Time Search re-installed onto the Railway volume** (Jay ran
+  `/slack/install` against the Railway redirect URL — registered in the Slack
+  app config). Warm path is live and now survives everything.
+- **Web board fully live end-to-end:** Slack 🌐 button → signed org link →
+  Vercel → Railway. Verified, including tampered-signature 403. No `:3001`
+  tunnel exists or is needed, ever again. The old "Jay dependency" in §5 is gone.
+- **Railway DB started fresh** — Ian's laptop `clew.db` (and its GIF-ready
+  seed) is a dead artifact. Re-seed in ~4 min: DM `telhi.org` → confirm profile
+  → Find Grants.
+- **NEW: demo reset** — DM Clew `reset clew` → confirm → wipes profile +
+  prospects, archives war rooms, App Home back to onboarding. Use freely
+  between video takes.
+- **Deploys now:** `git push` then `npx @railway/cli up -d` from repo root
+  (CLI currently authed on Jay's machine; `railway logs` for prod logs).
+- Tests: **40 green.**
 
 ## 0. TL;DR
 
@@ -45,24 +78,11 @@ walkthrough-grounded video script, and 5 reference GIFs**.
   `A0BG7GBD4CX`, that Ian's machine was mistakenly running earlier — it lacks the
   war-room scopes. `.env` now points at `A0BGUBZF23E` (correct). **When cleaning up
   duplicate apps, delete `A0BG7GBD4CX`, NOT `A0BGUBZF23E`.**
-- **Run `app_oauth.py`, NOT `app.py`.** OAuth is installed; `app_oauth.py` is the
-  runner that serves the Socket-Mode bot + OAuth + the board API on :3001. Running
-  both = double-handling.
-- **OAuth install is persisted** to `data/installations/none-T0BGGC4QGUB` (team
-  `T0BGGC4QGUB`) — warm-path/Real-Time Search survives restarts and tunnel death. The
-  `:3000` tunnel is only needed to (re)install OAuth, not for normal running.
-- **Real-Time Search status (as of this session): LIVE.** OAuth installed + persisted;
-  verified live last night (`search.messages` returned real results; warm-path fires in
-  Find Grants). Both `app_oauth.py` and the `:3000` tunnel were running at session end.
-- **Two different tunnels, don't confuse them.** `:3000` = OAuth install (running now).
-  `:3001` = the **web-board API** that Vercel reads. As of session end **no `:3001`
-  tunnel was running**, so the public web board can't reach this machine yet — that's the
-  Jay dependency (see §5).
-- **DB was re-seeded** tonight for a clean onboarding GIF. Current `clew.db` =
-  **TEL HI profile only, no prospects.** Click **Find Grants** once (~2–3 min) to
-  repopulate before recording. (Ian's local DB is now authoritative; Jay's older DB
-  is NOT synced, and the old `#grant-…` channels in the sidebar are orphaned
-  leftovers — ignore or archive.)
+- ~~Run app_oauth.py / tunnels / laptop DB~~ — **superseded by §0a: everything runs
+  on Railway now.** Never start a local bot while Railway is up (split-brain: Socket
+  Mode round-robins events across connections). Real-Time Search remains LIVE, now
+  persisted on the Railway volume. Old `#grant-…` channels from laptop-era DBs are
+  orphans — archive by hand or ignore.
 - **Full Find Grants sweep takes ~2–3 min** (6 program areas × 3 sources + warm-path
   + 990 checks); the war-room **brief takes ~1–2 min**. The video script speed-ramps
   both — do NOT show them real-time.
