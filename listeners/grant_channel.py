@@ -48,6 +48,24 @@ PROSPECT:
 """
 
 
+def channel_topic_for(prospect: dict) -> str:
+    """Always-visible channel topic: deadline + size at a glance."""
+    due = prospect.get("deadline_date") or "TBD"
+    size = prospect.get("grant_size") or "verify on funder site"
+    return f"📅 Due {due} · 💰 {size} · brief pinned"
+
+
+async def set_grant_channel_topic(
+    client: AsyncWebClient, channel_id: str, prospect: dict
+) -> None:
+    try:
+        await client.conversations_setTopic(
+            channel=channel_id, topic=channel_topic_for(prospect)
+        )
+    except SlackApiError:
+        pass  # topic is nice-to-have
+
+
 def channel_name_for(prospect_name: str) -> str:
     """Slack channel name: lowercase, [a-z0-9-], <=75 chars, grant- prefix."""
     slug = re.sub(r"[^a-z0-9]+", "-", prospect_name.lower()).strip("-")
@@ -96,6 +114,8 @@ async def create_grant_channel(
         await client.conversations_invite(channel=channel_id, users=user_id)
     except SlackApiError:
         pass  # e.g. already_in_channel; the channel still works
+
+    await set_grant_channel_topic(client, channel_id, prospect)
 
     intro = await client.chat_postMessage(
         channel=channel_id,

@@ -18,13 +18,14 @@ from listeners.actions.reset_action import (
     build_reset_confirmation_blocks,
     is_reset_request,
 )
+from listeners.briefing import is_briefing_request, post_briefing
 from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
 from listeners.views.setup_prompt_builder import (
     build_chat_nav_blocks,
     build_profile_setup_blocks,
 )
-from storage import get_org_profile
+from storage import get_org_profile, set_briefing_channel
 
 
 async def handle_message(
@@ -72,6 +73,14 @@ async def handle_message(
                 blocks=await build_reset_confirmation_blocks(team_id),
                 thread_ts=thread_ts,
             )
+            return
+
+        # "clew briefing" in a DM: post the morning briefing now and make
+        # this DM its daily 9am home.
+        if is_dm and is_briefing_request(text):
+            team_id = context.team_id or "default"
+            await asyncio.to_thread(set_briefing_channel, team_id, channel_id)
+            await post_briefing(client, channel_id, team_id)
             return
 
         # Get session ID for conversation context

@@ -146,6 +146,11 @@ async def main():
     await web.TCPSite(runner, host=server.host, port=port).start()
     logger.info("OAuth server + board API listening on port %s", port)
 
+    # Proactive daily briefing — Clew checks the pipeline every morning.
+    from listeners.briefing import briefing_loop
+
+    asyncio.create_task(briefing_loop(app.client, logger))
+
     handler = AsyncSocketModeHandler(app, os.environ.get("SLACK_APP_TOKEN"))
     await handler.start_async()
 

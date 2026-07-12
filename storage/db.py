@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS prospects (
 # Columns added after the first release; applied to pre-existing DBs.
 _MIGRATIONS = [
     "ALTER TABLE prospects ADD COLUMN grant_channel_id TEXT",
+    "ALTER TABLE org_profile ADD COLUMN briefing_channel_id TEXT",
 ]
 
 
@@ -293,6 +294,33 @@ def get_prospects_grouped_by_stage(org_id: str) -> dict[str, list[dict]]:
         for row in rows:
             grouped.setdefault(row["stage"], []).append(dict(row))
         return grouped
+    finally:
+        conn.close()
+
+
+def set_briefing_channel(org_id: str, channel_id: str) -> None:
+    """Where the daily briefing lands; set when someone asks for one."""
+    conn = _connect()
+    try:
+        conn.execute(
+            "UPDATE org_profile SET briefing_channel_id = ?, updated_at = ? "
+            "WHERE org_id = ?",
+            (channel_id, _now(), org_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def list_briefing_targets() -> list[dict]:
+    """(org_id, briefing_channel_id) pairs that opted into daily briefings."""
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT org_id, briefing_channel_id FROM org_profile "
+            "WHERE briefing_channel_id IS NOT NULL"
+        ).fetchall()
+        return [dict(row) for row in rows]
     finally:
         conn.close()
 

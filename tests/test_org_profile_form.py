@@ -203,3 +203,83 @@ def test_nav_blocks_include_web_board_link(monkeypatch):
 
     without_team = build_chat_nav_blocks()[0]["elements"]
     assert all(e["action_id"] != "clew_open_web_board" for e in without_team)
+
+
+def test_briefing_blocks_flags_due_soon_and_counts():
+    from datetime import date, timedelta
+
+    from listeners.briefing import build_briefing_blocks
+    from storage import insert_prospect, update_prospect, upsert_org_profile
+
+    upsert_org_profile(
+        org_id="Tbrief",
+        mission="m",
+        geography="g",
+        program_areas="a",
+        grant_size_min=None,
+        grant_size_max=None,
+        exclusions=None,
+    )
+    soon = (date.today() + timedelta(days=3)).isoformat()
+    pid = insert_prospect(
+        org_id="Tbrief",
+        name="Urgent Fund",
+        source="grants_gov",
+        source_ref=None,
+        program_area=None,
+        geography=None,
+        grant_size=None,
+        fit_rationale="r",
+        fit_sources=["https://www.grants.gov/x"],
+    )
+    update_prospect(
+        pid, stage="approved", deadline_date=soon, grant_channel_id="C_ROOM"
+    )
+    insert_prospect(
+        org_id="Tbrief",
+        name="Waiting Fund",
+        source="grants_gov",
+        source_ref=None,
+        program_area=None,
+        geography=None,
+        grant_size=None,
+        fit_rationale="r",
+        fit_sources=["https://www.grants.gov/y"],
+    )
+
+    text = str(build_briefing_blocks("Tbrief"))
+    assert "Urgent Fund" in text and "3 day" in text and "C_ROOM" in text
+    assert "1 prospect" in text  # qualified awaiting review
+
+
+def test_briefing_blocks_empty_state():
+    from listeners.briefing import build_briefing_blocks
+
+    text = str(build_briefing_blocks("Tnothing"))
+    assert "No fires today" in text
+
+
+def test_channel_topic_shows_deadline_and_size():
+    from listeners.grant_channel import channel_topic_for
+
+    topic = channel_topic_for({"deadline_date": "2026-09-30", "grant_size": "$50K"})
+    assert "2026-09-30" in topic and "$50K" in topic
+    fallback = channel_topic_for({})
+    assert "TBD" in fallback and "verify" in fallback
+
+
+def test_briefing_targets_roundtrip():
+    from storage import list_briefing_targets, set_briefing_channel, upsert_org_profile
+
+    upsert_org_profile(
+        org_id="Ttarget",
+        mission="m",
+        geography="g",
+        program_areas="a",
+        grant_size_min=None,
+        grant_size_max=None,
+        exclusions=None,
+    )
+    set_briefing_channel("Ttarget", "D_HOME")
+    targets = list_briefing_targets()
+    assert {"org_id": "Ttarget", "briefing_channel_id": "D_HOME"} in targets

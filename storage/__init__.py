@@ -7,8 +7,10 @@ from .db import (
     get_prospects_grouped_by_stage,
     init_db,
     insert_prospect,
+    list_briefing_targets,
     list_org_ids,
     reset_org,
+    set_briefing_channel,
     update_prospect,
     upsert_org_profile,
 )
@@ -26,4 +28,6 @@ __all__ = [
     "get_prospects_grouped_by_stage",
     "list_org_ids",
     "reset_org",
+    "set_briefing_channel",
+    "list_briefing_targets",
 ]
