@@ -117,8 +117,12 @@ cloudflared tunnel --url http://localhost:3000
 ```
 
 Secrets live in `.env` (gitignored): `A0BGUBZF23E` bot+app tokens, the three OAuth
-creds, `ANTHROPIC_API_KEY`. **These were pasted in chat during setup — rotate the
-Anthropic key + regenerate Slack tokens right after submitting Sunday.**
+creds, `ANTHROPIC_API_KEY`, **plus the two web-board values: `CLEW_BOARD_SECRET`
+and `CLEW_API_TOKEN`** — these must be byte-identical to the values in the Vercel
+project env (jays-projects/clew-board), or the 🌐 Web Board button emits unsigned
+links that Vercel 403s ("link isn't valid"). Get them from Jay. **All of these were
+pasted in chat during setup — rotate the Anthropic key + regenerate Slack tokens
+right after submitting.**
 
 ## 5. Ian's action items (Sunday) + the Jay dependency
 
