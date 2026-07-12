@@ -47,7 +47,31 @@ or "Ian's machine is authoritative" is **obsolete**. Current truth:
   3. **Canvas application drafts** — "Help me apply" now writes the outline into
      the war room's channel canvas (living doc, team-editable) when OAuth's user
      token is available; falls back to a chat message otherwise.
-- Tests: **44 green.**
+- **Sunday-afternoon bundle #2 (from Jay's live-test feedback — all shipped, 4 commits):**
+  1. **Deadlines auto-captured** — `save_qualified_prospect` now takes
+     `deadline_date` (grants.gov close dates land automatically, normalized to
+     ISO) + `application_url` (citation-gated). The Approve deadline popup only
+     appears when Clew genuinely couldn't find a deadline; the war-room brief
+     backfills one it researches (row + channel topic + Home board).
+  2. **Real apply links** — new `fetch_webpage` agent tool (any funder page;
+     fetched content pinned as untrusted data in the system prompt). "Help me
+     apply" output must START with `🔗 Apply here:` + confirmed deadline;
+     "VERIFY on the funder's site" is only allowed after an actual fetch
+     attempt. Briefs put the apply link first in sources ("Apply here").
+  3. **Task designation engine** — new `grant_tasks` table. In a war room:
+     🧩 Designate Tasks (agent proposes 3-6 action items from the requirements)
+     → each row has an *Assign to…* people picker → assignee gets a threaded
+     @-ping → ✅ Done strikes it through. Conversational too: "@Clew have @sam
+     pull our audited financials" creates an owned task (`assign_grant_task`
+     tool, war-room-scoped). Board rebuilds from DB on every touch.
+  4. **Grant-scoped war-room buttons** — replies inside a `#grant-…` channel now
+     carry ✍️ Draft Application / 🧩 Designate Tasks / 📋 Tasks / 🌐 Grant
+     Website / 📅 Set Deadline (only while unknown) instead of the org-wide
+     nav; a "Quick actions" message posts under the pinned brief. Org-wide
+     buttons (Find Grants / Saved Grants / Edit Profile / Web Board) stay in
+     DMs + general channels. Fixed: app_mention was stripping ALL `<@U…>`
+     mentions, which would have eaten task assignees.
+- Tests: **57 green.**
 
 ## 0. TL;DR
 

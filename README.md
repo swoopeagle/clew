@@ -172,7 +172,11 @@ Open the app in Slack:
   history) happen in the open where colleagues can weigh in.
 - **War rooms** (`#grant-…`) are per-grant workspaces Clew creates when you
   Approve — inside one, `@clew` already knows which grant the room is for, with
-  the brief pinned, the deadline in the topic bar, and drafts in the canvas.
+  the brief pinned, the deadline in the topic bar, drafts in the canvas, and
+  grant-scoped buttons: draft the application, open the funder's site, and
+  **designate tasks** — Clew proposes the action items and each one is handed
+  to a teammate with a people picker (or just say "have @sam pull our
+  financials").
 
 There's no wrong door: Clew answers wherever it's asked — channels just need
 the @mention.
