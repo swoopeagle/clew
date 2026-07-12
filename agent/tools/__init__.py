@@ -7,10 +7,12 @@ from .grant_sources import (
 )
 from .org_profile_tool import save_org_profile_tool
 from .qualify import save_qualified_prospect_tool
+from .tasks import assign_grant_task_tool
 from .website import fetch_org_website_tool, fetch_webpage_tool
 from .workspace_search import search_workspace_tool
 
 __all__ = [
+    "assign_grant_task_tool",
     "fetch_org_website_tool",
     "fetch_webpage_tool",
     "search_grants_gov_tool",

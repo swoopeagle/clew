@@ -13,6 +13,7 @@ from claude_agent_sdk import (
 from agent.context import agent_deps_var
 from agent.deps import AgentDeps
 from agent.tools import (
+    assign_grant_task_tool,
     fetch_org_website_tool,
     fetch_webpage_tool,
     get_990_filings_tool,
@@ -61,6 +62,12 @@ page so you can confirm the REAL apply link, deadline, and requirements \
 instead of telling the user to go look. grants.gov detail pages often \
 don't render for a plain fetch — use the search tool's own data for \
 those and fetch the agency/funder's own pages instead.
+- `assign_grant_task` — inside a grant war room, designates an action item \
+(optionally owned by a teammate). When the user says things like "have \
+@sam pull our financials" or asks you to split up the application work, \
+create one task per item. The assignee_user_id must be a Slack user ID \
+you saw in a `<@U…>` mention in this conversation — never invent one; \
+omit it when nobody was named.
 
 ## SEARCH STRATEGY
 When asked to find grants, ALWAYS complete the full sweep BEFORE replying:
@@ -164,6 +171,7 @@ grant_tools_server = create_sdk_mcp_server(
         save_org_profile_tool,
         fetch_org_website_tool,
         fetch_webpage_tool,
+        assign_grant_task_tool,
     ],
 )
 
@@ -182,6 +190,7 @@ AGENT_TOOLS = [
         "save_org_profile",
         "fetch_org_website",
         "fetch_webpage",
+        "assign_grant_task",
     )
 ]
 

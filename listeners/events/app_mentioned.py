@@ -40,8 +40,10 @@ async def handle_app_mentioned(
         text = event.get("text", "")
         thread_ts = event.get("thread_ts") or event["ts"]
 
-        # Strip the bot mention from the text
-        cleaned_text = re.sub(r"<@[A-Z0-9]+>", "", text).strip()
+        # Strip ONLY the bot's own mention — teammate mentions must survive
+        # (e.g. "have <@U123> pull the financials" drives task assignment).
+        bot_user_id = context.bot_user_id or ""
+        cleaned_text = re.sub(rf"<@{re.escape(bot_user_id)}(\|[^>]*)?>", "", text).strip()
 
         if not cleaned_text:
             from listeners.views.welcome_builder import build_welcome_blocks

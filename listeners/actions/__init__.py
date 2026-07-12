@@ -6,6 +6,12 @@ from .find_grants_action import handle_find_grants
 from .org_profile_actions import handle_ai_draft_profile, handle_open_org_profile
 from .reset_action import handle_cancel_reset, handle_confirm_reset
 from .saved_grants_action import handle_show_saved
+from .task_actions import (
+    handle_assign_task,
+    handle_designate_tasks,
+    handle_show_tasks,
+    handle_task_done,
+)
 from .prospect_actions import (
     handle_approve_prospect,
     handle_mark_applied,
@@ -26,6 +32,10 @@ def register(app: AsyncApp):
     app.action("clew_confirm_reset")(handle_confirm_reset)
     app.action("clew_cancel_reset")(handle_cancel_reset)
     app.action("clew_draft_application")(handle_draft_application)
+    app.action("clew_designate_tasks")(handle_designate_tasks)
+    app.action("clew_show_tasks")(handle_show_tasks)
+    app.action("clew_assign_task")(handle_assign_task)
+    app.action("clew_task_done")(handle_task_done)
 
     # URL buttons still emit an action that must be acked.
     async def _ack_only(ack):

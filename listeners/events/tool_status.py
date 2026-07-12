@@ -11,6 +11,7 @@ TOOL_STATUS = {
     "fetch_webpage": "🌐 Reading the funder's site…",
     "save_org_profile": "💾 Saving your org profile…",
     "save_qualified_prospect": "✅ Posting a qualified prospect…",
+    "assign_grant_task": "🧩 Designating a task…",
 }
 
 

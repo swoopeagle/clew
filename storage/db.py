@@ -67,6 +67,17 @@ CREATE TABLE IF NOT EXISTS prospects (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS grant_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_id TEXT NOT NULL,
+    prospect_id INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    assignee_user_id TEXT,
+    status TEXT NOT NULL DEFAULT 'open',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 # Columns added after the first release; applied to pre-existing DBs.
@@ -301,6 +312,82 @@ def get_prospects_grouped_by_stage(org_id: str) -> dict[str, list[dict]]:
         for row in rows:
             grouped.setdefault(row["stage"], []).append(dict(row))
         return grouped
+    finally:
+        conn.close()
+
+
+def create_task(
+    org_id: str,
+    prospect_id: int,
+    description: str,
+    assignee_user_id: str | None = None,
+) -> int:
+    """One action item on one grant — e.g. 'Gather audited financials',
+    owned by a Slack user once assigned."""
+    conn = _connect()
+    try:
+        now = _now()
+        cur = conn.execute(
+            """
+            INSERT INTO grant_tasks
+                (org_id, prospect_id, description, assignee_user_id, status,
+                 created_at, updated_at)
+            VALUES (?, ?, ?, ?, 'open', ?, ?)
+            """,
+            (org_id, prospect_id, description, assignee_user_id, now, now),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def get_task(task_id: int) -> dict | None:
+    conn = _connect()
+    try:
+        row = conn.execute(
+            "SELECT * FROM grant_tasks WHERE id = ?", (task_id,)
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def list_tasks(prospect_id: int) -> list[dict]:
+    """All tasks for one grant, open before done, oldest first within each."""
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM grant_tasks WHERE prospect_id = ? "
+            "ORDER BY CASE status WHEN 'open' THEN 0 ELSE 1 END, id",
+            (prospect_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def set_task_assignee(task_id: int, assignee_user_id: str) -> None:
+    conn = _connect()
+    try:
+        conn.execute(
+            "UPDATE grant_tasks SET assignee_user_id = ?, updated_at = ? "
+            "WHERE id = ?",
+            (assignee_user_id, _now(), task_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def complete_task(task_id: int) -> None:
+    conn = _connect()
+    try:
+        conn.execute(
+            "UPDATE grant_tasks SET status = 'done', updated_at = ? WHERE id = ?",
+            (_now(), task_id),
+        )
+        conn.commit()
     finally:
         conn.close()
 
