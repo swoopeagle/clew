@@ -23,6 +23,21 @@ async def _get_workspace_url(client: AsyncWebClient) -> str | None:
     return _workspace_url or None
 
 
+async def _get_visible_channels(client: AsyncWebClient) -> dict | None:
+    """Live snapshot of what Clew can see — the public channels it belongs to
+    and a DM count — for the App Home transparency section. Queried fresh each
+    time (Slack membership is the source of truth). Returns None on failure so
+    the section is simply omitted. Private channels aren't listed (the bot lacks
+    groups:read), but it can only be in ones it was explicitly added to."""
+    try:
+        pub = await client.users_conversations(types="public_channel", limit=200)
+        names = sorted(c.get("name", "?") for c in pub.get("channels", []))
+        dms = await client.users_conversations(types="im", limit=200)
+        return {"channels": names, "dm_count": len(dms.get("channels", []))}
+    except Exception:
+        return None
+
+
 async def publish_home(
     client: AsyncWebClient, user_id: str, team_id: str, user_token: str | None = None
 ) -> None:
@@ -48,5 +63,6 @@ async def publish_home(
         is_connected=is_connected,
         workspace_url=await _get_workspace_url(client),
         team_id=team_id,
+        visible_channels=await _get_visible_channels(client),
     )
     await client.views_publish(user_id=user_id, view=view)

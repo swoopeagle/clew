@@ -84,6 +84,30 @@ def _pipeline_summary(board: dict[str, list[dict]]) -> str | None:
     return ":bar_chart: *Pipeline:*  " + "  ·  ".join(segments)
 
 
+def _visibility_block(visible: dict) -> dict:
+    """Trust/observability section: exactly which spaces Clew can see, queried
+    live from Slack. Reinforces that Clew only reads what it's invited to."""
+    channels = visible.get("channels") or []
+    chan_list = "  ".join(f"`#{c}`" for c in channels) if channels else "_none yet_"
+    dm_count = visible.get("dm_count") or 0
+    dm_txt = (
+        f"  ·  {dm_count} direct message{'s' if dm_count != 1 else ''}"
+        if dm_count
+        else ""
+    )
+    return {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": (
+                "*:lock: What Clew can see*\n"
+                "Clew only reads channels you invite it to — remove it anytime.\n"
+                f"{chan_list}{dm_txt}"
+            ),
+        },
+    }
+
+
 def build_app_home_view(
     org_profile: dict | None = None,
     board: dict[str, list[dict]] | None = None,
@@ -91,6 +115,7 @@ def build_app_home_view(
     is_connected: bool = False,
     workspace_url: str | None = None,
     team_id: str | None = None,
+    visible_channels: dict | None = None,
 ) -> dict:
     """Build the App Home Block Kit view: hero, org profile summary (or
     onboarding steps), action buttons, pipeline summary, and the grant board.
@@ -220,6 +245,8 @@ def build_app_home_view(
     blocks.extend(build_board_blocks(board, workspace_url=workspace_url))
 
     blocks.append({"type": "divider"})
+    if visible_channels is not None:
+        blocks.append(_visibility_block(visible_channels))
     blocks.append(
         {
             "type": "context",
