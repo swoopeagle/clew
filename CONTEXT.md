@@ -1,7 +1,54 @@
 # CONTEXT.md — Where Clew is at, and what's left
 
-_Last updated: Friday July 11, 2026, evening (Jay's session). For Ian (or anyone)
-continuing development. Read this top to bottom before touching code._
+_Last updated: Saturday July 12, 2026, night (Jay's session, final handoff to Ian).
+Read this top to bottom before touching code. The "Saturday update" section below
+supersedes anything older where they conflict._
+
+---
+
+## ⚡ Saturday update — what shipped since Friday's write-up
+
+All verified live in the slackathon workspace; every commit is on `main`.
+
+1. **Deeper search** — the agent now always sweeps all three sources (Grants.gov per
+   program area, ProPublica foundations + 990s, USAspending) before replying; never
+   asks permission mid-search. Live result: 3 real SF foundations for TEL HI.
+2. **Chat nav row** under replies: 🔍 Find Grants · 📋 Saved Grants · Edit Org Profile ·
+   🌐 Web Board. **Button replies now route to the channel/thread where clicked**
+   (`listeners/actions/origin.py`) — they used to silently answer into a DM.
+3. **AI form fill** in the org-profile modal ("✨ Draft with AI": website/notes →
+   drafts every field, `agent/profile_draft.py`).
+4. **Application drafting** — "✍️ Help me apply" button on approved cards.
+5. **Grant war rooms** — Approve creates `#grant-<name>` (needs `channels:manage` —
+   ALREADY added to the manifest and reinstalled), invites the approver, posts an
+   agent-researched brief (amount/deadline/requirements, cited, VERIFY list, pinned).
+   `grant_channel_id` column added via migration in `storage/db.py`.
+6. **War-room context** — messages in a grant channel get a [GRANT WAR ROOM] block
+   (`agent/channel_context.py`), so @clew there helps with THAT grant unprompted;
+   normal channels keep the master-list role.
+7. **Web board (https://clew-board.vercel.app, Vercel project `clew-board`)** — now
+   gated by **signed per-org links**: the 🌐 button carries `?org=<team>&sig=<hmac>`
+   (`board_link()` in `webapi.py`); the Next proxy verifies the HMAC and 403s
+   anything else, so the bare URL no longer opens. The Python `/api/board` also
+   requires a bearer token now.
+8. **Model** — running on `claude-sonnet-5` for cost (`CLEW_AGENT_MODEL` in `.env`);
+   consider one Opus run when recording the video.
+
+**Secrets Ian must get from Jay (never committed):** `.env` values — Anthropic key,
+Slack bot/app tokens, `CLEW_BOARD_SECRET`, `CLEW_API_TOKEN`. The same
+`CLEW_BOARD_SECRET`/`CLEW_API_TOKEN` are set in the Vercel project env.
+
+**Ops chain for the public web board (all on the host laptop):** `app.py` (bot +
+API on :3001) → `cloudflared tunnel --url http://localhost:3001` → tunnel URL as
+`CLEW_API_URL` in Vercel. ⚠️ The quick-tunnel URL changes on every cloudflared
+restart → update the Vercel env + `cd web && vercel deploy --prod`.
+
+**What's actually left (in order):** ① demo video (~3 min — killer arc: website →
+AI profile → three-source search with live statuses → cited cards → Approve → war
+room + brief appears → web board updates) ② Devpost text ③ invite
+slackhack@salesforce.com + testing@devpost.com ④ delete the duplicate Clew app
+(clew vs clew2) ⑤ optional: OAuth/warm-path (Real-Time Search, second required
+tech — steps in "Remaining work" below) ⑥ keep bot+tunnel running through judging.
 
 ---
 
