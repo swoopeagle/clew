@@ -110,10 +110,22 @@ a live web view."
 3. *(Optional, only if the tunnel + Vercel are live)* click **🌐 Web Board**.
 
 ### 2:45–3:00 — Roadmap + mission close
-**VO:** "Next: reconstruct your full funding history from public 990 filings, and
-sync awarded grants into Salesforce Nonprofit Cloud. Grant seeking is how small
-nonprofits survive. Clew gives them their hours back — for the mission."
-**Screen:** one slide — **Find → Manage → Salesforce Nonprofit Cloud.**
+**VO:** "It already reconstructs your *federal* funding history — ask it what any
+peer has won and it pulls the real, cited awards and spots the recurring funders.
+Next: foundation history from public 990 filings, and a two-way sync with
+Salesforce Nonprofit Cloud. Grant seeking is how small nonprofits survive. Clew
+gives them their hours back — for the mission."
+**Screen:** one slide — **Find → Manage → Import & sync (Salesforce NPC).**
+
+### OPTIONAL day-to-day beat (~10s) — "know your history"
+Real capability, verified live. Drop in during the day-to-day section if you have
+room:
+- DM Clew: `what federal grants has Mission Neighborhood Centers won?` → it replies
+  with the **real cited USAspending history** ($20M / $30.6M / $22.5M Head Start…)
+  and calls out the **recurring Head Start stream**. Proves "start day one with
+  your funders already tagged, not an empty board."
+- Note: for TEL HI itself this correctly returns *nothing* (small org, no federal
+  money) — so demo it against a **peer/grantee that has history**.
 
 ---
 
