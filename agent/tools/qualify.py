@@ -7,11 +7,30 @@ qualified prospect without a citation attached.
 """
 
 import asyncio
+from urllib.parse import urlparse
 
 from claude_agent_sdk import tool
 
 from agent.context import agent_deps_var
-from storage import insert_prospect, update_prospect
+from storage import find_prospect_by_identity, insert_prospect, update_prospect
+
+# The only hosts our search tools actually emit. A citation on any other host
+# didn't come from a tool result — so it can't back a qualified prospect.
+_ALLOWED_CITATION_HOSTS = ("grants.gov", "propublica.org", "usaspending.gov")
+
+
+def _valid_citation(url: object) -> bool:
+    if not isinstance(url, str):
+        return False
+    parsed = urlparse(url.strip())
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return False
+    host = parsed.netloc.lower().split(":")[0]
+    return any(host == h or host.endswith("." + h) for h in _ALLOWED_CITATION_HOSTS)
+
+
+def _rejection(text: str) -> dict:
+    return {"content": [{"type": "text", "text": text}]}
 
 
 @tool(
@@ -32,7 +51,7 @@ from storage import insert_prospect, update_prospect
             },
             "source": {
                 "type": "string",
-                "enum": ["grants_gov", "propublica", "usaspending", "sam"],
+                "enum": ["grants_gov", "propublica", "usaspending"],
                 "description": "Which tool this prospect came from.",
             },
             "source_ref": {
@@ -58,6 +77,7 @@ from storage import insert_prospect, update_prospect
             "fit_sources": {
                 "type": "array",
                 "items": {"type": "string"},
+                "minItems": 1,
                 "description": "Real URLs/citations from search tool results backing the rationale. Never invent one.",
             },
             "warm_path_note": {
@@ -76,6 +96,28 @@ async def save_qualified_prospect_tool(args):
 
     deps = agent_deps_var.get()
 
+    # Trust boundary, enforced (not just requested): a prospect can only be
+    # shortlisted with a real citation from a search tool. Drop anything that
+    # isn't a URL on a source domain we actually query; refuse if none remain.
+    citations = [s for s in (args.get("fit_sources") or []) if _valid_citation(s)]
+    if not citations:
+        return _rejection(
+            "REJECTED: save_qualified_prospect needs at least one real citation URL "
+            "from a search tool (a grants.gov, propublica.org, or usaspending.gov "
+            "link). Do not shortlist a prospect you cannot cite — re-run the search "
+            "tools and cite an actual result, or skip this prospect."
+        )
+
+    # Don't shortlist the same funder twice (e.g. Find Grants run more than once).
+    existing = await asyncio.to_thread(
+        find_prospect_by_identity, deps.team_id, args["name"], args.get("source_ref")
+    )
+    if existing:
+        return _rejection(
+            f"'{args['name']}' is already on the shortlist (prospect #{existing['id']}, "
+            f"stage: {existing['stage']}). Not adding a duplicate."
+        )
+
     prospect_id = await asyncio.to_thread(
         insert_prospect,
         org_id=deps.team_id,
@@ -86,7 +128,7 @@ async def save_qualified_prospect_tool(args):
         geography=args.get("geography"),
         grant_size=args.get("grant_size"),
         fit_rationale=args["fit_rationale"],
-        fit_sources=args["fit_sources"],
+        fit_sources=citations,
         warm_path_note=args.get("warm_path_note"),
     )
 
@@ -104,7 +146,7 @@ async def save_qualified_prospect_tool(args):
             )
         },
     }
-    blocks = build_prospect_card_blocks(prospect, args["fit_sources"])
+    blocks = build_prospect_card_blocks(prospect, citations)
 
     posted = await deps.client.chat_postMessage(
         channel=deps.channel_id,

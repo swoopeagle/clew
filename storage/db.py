@@ -202,6 +202,30 @@ def insert_prospect(
         conn.close()
 
 
+def find_prospect_by_identity(
+    org_id: str, name: str, source_ref: str | None = None
+) -> dict | None:
+    """Find an existing prospect for this org that matches by source_ref (when
+    given) or, failing that, by case-insensitive name. Used to avoid inserting
+    duplicates when Find Grants is run more than once."""
+    conn = _connect()
+    try:
+        if source_ref:
+            row = conn.execute(
+                "SELECT * FROM prospects WHERE org_id = ? AND source_ref = ?",
+                (org_id, source_ref),
+            ).fetchone()
+            if row:
+                return dict(row)
+        row = conn.execute(
+            "SELECT * FROM prospects WHERE org_id = ? AND lower(name) = lower(?)",
+            (org_id, name),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
 def get_prospect_by_grant_channel(channel_id: str) -> dict | None:
     conn = _connect()
     try:

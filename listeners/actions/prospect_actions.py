@@ -5,6 +5,7 @@ from logging import Logger
 
 from slack_bolt import Ack
 from slack_bolt.context.async_context import AsyncBoltContext
+from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
 from listeners.views.home_refresh import publish_home
@@ -48,10 +49,16 @@ async def handle_approve_prospect(
     await ack()
     try:
         prospect_id = int(body["actions"][0]["value"])
-        # Open the modal first — trigger_id expires 3 seconds after the click.
-        await client.views_open(
-            trigger_id=body["trigger_id"], view=build_deadline_modal(prospect_id)
-        )
+        # Open the deadline modal (trigger_id expires ~3s after the click). If it
+        # fails, approval must still proceed — the deadline can be set later, but
+        # the war room and stage change should never be lost to a dead trigger.
+        try:
+            await client.views_open(
+                trigger_id=body["trigger_id"],
+                view=build_deadline_modal(prospect_id),
+            )
+        except SlackApiError as e:
+            logger.warning(f"Deadline modal did not open ({e}); approving anyway.")
 
         await asyncio.to_thread(update_prospect, prospect_id, stage="approved")
         prospect = await asyncio.to_thread(get_prospect, prospect_id)

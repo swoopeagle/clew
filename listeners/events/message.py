@@ -66,11 +66,11 @@ async def handle_message(
         await set_status(
             status="Thinking...",
             loading_messages=[
-                "Teaching the hamsters to type faster…",
-                "Untangling the internet cables…",
-                "Consulting the office goldfish…",
-                "Polishing up the response just for you…",
-                "Convincing the AI to stop overthinking…",
+                "Pulling the thread…",
+                "Cross-checking funders against your profile…",
+                "Screening for fit…",
+                "Lining up the evidence…",
+                "Verifying every citation…",
             ],
         )
 
@@ -121,6 +121,6 @@ async def handle_message(
     except Exception as e:
         logger.exception(f"Failed to handle message: {e}")
         await say(
-            text=f":warning: Something went wrong! ({e})",
+            text=":warning: Something went wrong on my end — please try again in a moment.",
             thread_ts=event.get("thread_ts") or event.get("ts"),
         )

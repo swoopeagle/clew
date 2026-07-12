@@ -5,6 +5,7 @@ to cite verbatim when qualifying a prospect — never paraphrase a fact that
 isn't actually in one of these payloads.
 """
 
+import asyncio
 import json
 from datetime import date, timedelta
 
@@ -17,6 +18,10 @@ PROPUBLICA_ORG_URL = (
     "https://projects.propublica.org/nonprofits/api/v2/organizations/{ein}.json"
 )
 USASPENDING_SEARCH_URL = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
+
+# One slow government API must never freeze a live search. Bound every call.
+_TIMEOUT = aiohttp.ClientTimeout(total=15)
+_NETWORK_ERRORS = (aiohttp.ClientError, asyncio.TimeoutError, ValueError)
 
 
 def _text_result(payload: dict) -> dict:
@@ -54,9 +59,14 @@ async def search_grants_gov_tool(args):
     if args.get("agency"):
         body["agencies"] = args["agency"]
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post(GRANTS_GOV_SEARCH_URL, json=body) as resp:
-            data = await resp.json()
+    try:
+        async with aiohttp.ClientSession(timeout=_TIMEOUT) as session:
+            async with session.post(GRANTS_GOV_SEARCH_URL, json=body) as resp:
+                data = await resp.json(content_type=None)
+    except _NETWORK_ERRORS as e:
+        return _text_result(
+            {"source": "grants_gov", "error": f"Grants.gov unavailable: {e}"}
+        )
 
     hits = data.get("data", {}).get("oppHits", [])
     results = [
@@ -108,9 +118,14 @@ async def search_propublica_orgs_tool(args):
     if args.get("state"):
         params["state[id]"] = args["state"]
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(PROPUBLICA_SEARCH_URL, params=params) as resp:
-            data = await resp.json()
+    try:
+        async with aiohttp.ClientSession(timeout=_TIMEOUT) as session:
+            async with session.get(PROPUBLICA_SEARCH_URL, params=params) as resp:
+                data = await resp.json(content_type=None)
+    except _NETWORK_ERRORS as e:
+        return _text_result(
+            {"source": "propublica", "error": f"ProPublica search unavailable: {e}"}
+        )
 
     orgs = data.get("organizations", [])
     results = [
@@ -156,13 +171,21 @@ async def get_990_filings_tool(args):
     ein = args["ein"].replace("-", "")
     url = PROPUBLICA_ORG_URL.format(ein=ein)
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            if resp.status != 200:
-                return _text_result(
-                    {"source": "propublica", "error": f"No filings found for EIN {ein}"}
-                )
-            data = await resp.json()
+    try:
+        async with aiohttp.ClientSession(timeout=_TIMEOUT) as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    return _text_result(
+                        {
+                            "source": "propublica",
+                            "error": f"No filings found for EIN {ein}",
+                        }
+                    )
+                data = await resp.json(content_type=None)
+    except _NETWORK_ERRORS as e:
+        return _text_result(
+            {"source": "propublica", "error": f"ProPublica filings unavailable: {e}"}
+        )
 
     org = data.get("organization", {})
     filings = data.get("filings_with_data", [])[:5]
@@ -241,9 +264,14 @@ async def search_usaspending_tool(args):
         "order": "desc",
     }
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post(USASPENDING_SEARCH_URL, json=body) as resp:
-            data = await resp.json()
+    try:
+        async with aiohttp.ClientSession(timeout=_TIMEOUT) as session:
+            async with session.post(USASPENDING_SEARCH_URL, json=body) as resp:
+                data = await resp.json(content_type=None)
+    except _NETWORK_ERRORS as e:
+        return _text_result(
+            {"source": "usaspending", "error": f"USAspending unavailable: {e}"}
+        )
 
     results = [
         {

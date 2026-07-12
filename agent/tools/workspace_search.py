@@ -6,6 +6,7 @@ to skip the warm-path check rather than fabricate a "no prior mentions" claim.
 """
 
 from claude_agent_sdk import tool
+from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
 from agent.context import agent_deps_var
@@ -45,7 +46,17 @@ async def search_workspace_tool(args):
         }
 
     user_client = AsyncWebClient(token=deps.user_token)
-    resp = await user_client.search_messages(query=args["query"], count=5)
+    try:
+        resp = await user_client.search_messages(query=args["query"], count=5)
+    except SlackApiError as e:
+        return {
+            "content": [
+                {
+                    "type": "text",
+                    "text": f"Workspace search failed ({e.response.get('error', 'error')}). Skip the warm-path check for this prospect — do not guess.",
+                }
+            ]
+        }
     matches = resp.get("messages", {}).get("matches", [])
 
     if not matches:
