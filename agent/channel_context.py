@@ -52,15 +52,12 @@ async def prepend_channel_history(
     *,
     limit: int = 15,
 ) -> str:
-    """For a grant war room, prepend a short transcript of the channel's recent
-    messages so the agent is grounded in what the team has actually discussed
-    here — not just the stored grant record. No-op outside war rooms; any
-    failure (missing scope, not in channel) degrades silently to `text`."""
-    if not channel_id:
-        return text
-    prospect = await asyncio.to_thread(get_prospect_by_grant_channel, channel_id)
-    if not prospect:
-        return text  # only war rooms get history injection
+    """Prepend a short transcript of the channel's recent messages so the agent
+    is grounded in what's actually been said here, not just its own session.
+    Fires in any channel the bot can read; no-op in DMs (the session already
+    covers those) and on any failure (missing scope, not in channel)."""
+    if not channel_id or channel_id.startswith("D"):
+        return text  # DMs already have session continuity
 
     try:
         resp = await client.conversations_history(channel=channel_id, limit=limit)
@@ -80,8 +77,8 @@ async def prepend_channel_history(
 
     block = (
         "[CHANNEL HISTORY]\n"
-        "Recent messages in this war room, oldest first. Ground your reply in "
-        "what the team has already said here.\n"
+        "Recent messages in this channel, oldest first. Ground your reply in "
+        "what people have already said here.\n"
         f"{chr(10).join(lines)}\n"
         "[END CHANNEL HISTORY]\n\n"
     )
