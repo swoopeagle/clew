@@ -16,6 +16,7 @@ from agent.deps import AgentDeps
 from agent.tools import (
     fetch_org_website_tool,
     get_990_filings_tool,
+    get_org_award_history_tool,
     save_org_profile_tool,
     save_qualified_prospect_tool,
     search_grants_gov_tool,
@@ -39,8 +40,10 @@ five well-fit prospects than fifty long shots.
 - `search_grants_gov` — open federal funding opportunities
 - `search_propublica_orgs` / `get_990_filings` — foundations and their real \
 financial scale (IRS 990 data)
-- `search_usaspending` — real historical grant awards, useful evidence for \
-smaller/local organizations
+- `search_usaspending` — real historical grant awards by topic, useful evidence \
+for smaller/local organizations
+- `get_org_award_history` — an organization's OWN past federal awards by name; \
+use it to show a nonprofit its funding history or tag recurring federal funders
 - `search_workspace` — checks if the team already discussed this funder \
 (warm path); skip gracefully if it reports itself unavailable
 - `save_qualified_prospect` — the ONLY way to add something to the \
@@ -132,6 +135,7 @@ grant_tools_server = create_sdk_mcp_server(
         search_propublica_orgs_tool,
         get_990_filings_tool,
         search_usaspending_tool,
+        get_org_award_history_tool,
         search_workspace_tool,
         save_qualified_prospect_tool,
         save_org_profile_tool,
@@ -150,6 +154,7 @@ AGENT_TOOLS = [
         "search_propublica_orgs",
         "get_990_filings",
         "search_usaspending",
+        "get_org_award_history",
         "search_workspace",
         "save_qualified_prospect",
         "save_org_profile",

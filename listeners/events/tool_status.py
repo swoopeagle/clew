@@ -5,6 +5,7 @@ TOOL_STATUS = {
     "search_propublica_orgs": "📚 Checking ProPublica 990s…",
     "get_990_filings": "📚 Reading foundation 990 filings…",
     "search_usaspending": "🏛️ Scanning USAspending awards…",
+    "get_org_award_history": "🏛️ Pulling your federal award history…",
     "search_workspace": "🧵 Checking your workspace for warm paths…",
     "fetch_org_website": "🌐 Reading your website…",
     "save_org_profile": "💾 Saving your org profile…",

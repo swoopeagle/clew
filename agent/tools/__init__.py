@@ -1,5 +1,6 @@
 from .grant_sources import (
     get_990_filings_tool,
+    get_org_award_history_tool,
     search_grants_gov_tool,
     search_propublica_orgs_tool,
     search_usaspending_tool,
@@ -15,6 +16,7 @@ __all__ = [
     "search_propublica_orgs_tool",
     "get_990_filings_tool",
     "search_usaspending_tool",
+    "get_org_award_history_tool",
     "save_org_profile_tool",
     "save_qualified_prospect_tool",
     "search_workspace_tool",

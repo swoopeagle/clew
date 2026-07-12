@@ -286,3 +286,92 @@ async def search_usaspending_tool(args):
         for r in data.get("results", [])
     ]
     return _text_result({"source": "usaspending", "results": results})
+
+
+@tool(
+    name="get_org_award_history",
+    description=(
+        "Look up an organization's OWN past federal grant awards on USAspending.gov by "
+        "recipient name — use this to show a nonprofit its own funding history, tag its "
+        "recurring federal funders, or check a specific peer/grantee's track record. This "
+        "differs from search_usaspending (which searches by topic/keyword). Returns each "
+        "award with a citable URL — cite 'recipient_name', 'award_amount', 'awarding_agency', "
+        "and 'url' verbatim. If it returns no awards, say the org has no federal awards on "
+        "record — never invent a funding history."
+    ),
+    input_schema={
+        "type": "object",
+        "properties": {
+            "recipient_name": {
+                "type": "string",
+                "description": "Organization name as it appears on federal awards.",
+            },
+            "state": {
+                "type": "string",
+                "description": "Optional two-letter US state code to disambiguate.",
+            },
+        },
+        "required": ["recipient_name"],
+    },
+)
+async def get_org_award_history_tool(args):
+    filters = {
+        "award_type_codes": ["02", "03", "04", "05"],
+        "recipient_search_text": [args["recipient_name"]],
+        # Look back a decade — a funding history, not just recent awards.
+        "time_period": [
+            {
+                "start_date": (date.today() - timedelta(days=3650)).isoformat(),
+                "end_date": date.today().isoformat(),
+            }
+        ],
+    }
+    if args.get("state"):
+        filters["recipient_locations"] = [{"country": "USA", "state": args["state"]}]
+
+    body = {
+        "filters": filters,
+        "fields": [
+            "Award ID",
+            "Recipient Name",
+            "Award Amount",
+            "Awarding Agency",
+            "Start Date",
+            "End Date",
+            "Description",
+        ],
+        "page": 1,
+        "limit": 10,
+        "sort": "Award Amount",
+        "order": "desc",
+    }
+
+    try:
+        async with aiohttp.ClientSession(timeout=_TIMEOUT) as session:
+            async with session.post(USASPENDING_SEARCH_URL, json=body) as resp:
+                data = await resp.json(content_type=None)
+    except _NETWORK_ERRORS as e:
+        return _text_result(
+            {"source": "usaspending", "error": f"USAspending unavailable: {e}"}
+        )
+
+    results = [
+        {
+            "award_id": r.get("Award ID"),
+            "recipient_name": r.get("Recipient Name"),
+            "award_amount": r.get("Award Amount"),
+            "awarding_agency": r.get("Awarding Agency"),
+            "start_date": r.get("Start Date"),
+            "end_date": r.get("End Date"),
+            "url": f"https://www.usaspending.gov/award/{r.get('generated_internal_id')}",
+        }
+        for r in data.get("results", [])
+    ]
+    return _text_result(
+        {
+            "source": "usaspending",
+            "recipient_query": args["recipient_name"],
+            "award_count": len(results),
+            "results": results,
+        }
+    )
