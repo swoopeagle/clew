@@ -212,3 +212,41 @@ def test_grant_nav_blocks_url_fallback_and_deadline_conditional():
     }
     assert "clew_open_grant_link" not in by_action
     assert "clew_set_deadline" in by_action
+
+
+def test_channel_canvas_id_extraction():
+    from listeners.actions.draft_application_action import _channel_canvas_id
+
+    tabs_form = {
+        "properties": {
+            "tabs": [
+                {"type": "bookmarks", "id": "bookmarks"},
+                {"type": "canvas", "data": {"file_id": "F123"}},
+            ]
+        }
+    }
+    assert _channel_canvas_id(tabs_form) == "F123"
+
+    property_form = {"properties": {"canvas": {"file_id": "F456"}}}
+    assert _channel_canvas_id(property_form) == "F456"
+
+    assert _channel_canvas_id({"properties": {}}) is None
+    assert _channel_canvas_id({}) is None
+
+
+def test_channel_topic_truncates_long_grant_size():
+    from listeners.grant_channel import channel_topic_for
+
+    long_size = (
+        "Not stated by source; annual revenue ~$9.8M-$39.3M (2019-2023) "
+        "suggests capacity for grants across our $1,000-$500,000 range"
+    )
+    topic = channel_topic_for({"deadline_date": None, "grant_size": long_size})
+    assert topic.startswith("📅 Due TBD · 💰 ")
+    assert "…" in topic
+    assert len(topic) < 100
+
+    short = channel_topic_for(
+        {"deadline_date": "2026-09-01", "grant_size": "$5k-$25k"}
+    )
+    assert short == "📅 Due 2026-09-01 · 💰 $5k-$25k · brief pinned"

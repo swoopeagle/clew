@@ -104,23 +104,29 @@ async def handle_draft_application(
             text=f":writing_hand: Application help for {prospect['name']}",
         )
         if response_text:
-            canvas_made = await _try_canvas(
+            canvas_url = await _try_canvas(
+                client,
                 context.user_token,
                 prospect,
                 response_text,
                 logger,
                 # Canvases attach to channels, not DMs — use the war room.
                 canvas_channel=prospect.get("grant_channel_id"),
+                team_id=team_id,
             )
-            if canvas_made:
+            if canvas_url is not None:
+                link = (
+                    f" — <{canvas_url}|*open the draft*>." if canvas_url else "."
+                )
                 await client.chat_postMessage(
                     channel=channel_id,
                     thread_ts=thread_ts,
                     text=(
                         f":page_facing_up: I've drafted the application for "
                         f"*{prospect['name']}* into the canvas of "
-                        f"<#{prospect['grant_channel_id']}> — open the channel "
-                        "canvas to edit it together."
+                        f"<#{prospect['grant_channel_id']}>{link} It also "
+                        "lives under the canvas icon at the top of that "
+                        "channel — edit it together there."
                     ),
                 )
             else:
@@ -134,35 +140,80 @@ async def handle_draft_application(
         logger.exception(f"Failed to draft application: {e}")
 
 
+def _channel_canvas_id(channel: dict) -> str | None:
+    """The channel's existing canvas file id, from conversations_info data.
+    Slack exposes it either as a canvas-type tab or a canvas property."""
+    props = channel.get("properties") or {}
+    for tab in props.get("tabs") or []:
+        if tab.get("type") == "canvas":
+            file_id = (tab.get("data") or {}).get("file_id")
+            if file_id:
+                return file_id
+    return (props.get("canvas") or {}).get("file_id")
+
+
 async def _try_canvas(
+    client: AsyncWebClient,
     user_token: str | None,
     prospect: dict,
     outline: str,
     logger: Logger,
     canvas_channel: str | None,
-) -> bool:
+    team_id: str,
+) -> str | None:
     """Write the application draft into the war room's channel canvas — a
-    living doc the team edits together. Requires the OAuth user token
-    (canvases:write is a user scope) and a war-room channel; returns False
-    on any miss so the caller falls back to posting the text in chat."""
+    living doc the team edits together. A channel has at most ONE canvas, so
+    a re-draft replaces the existing canvas's content instead of failing.
+    Returns the canvas URL ("" when the workspace URL is unknown) on success,
+    or None on any miss so the caller falls back to posting the text in chat.
+    Requires the OAuth user token (canvases:write is a user scope)."""
     if not user_token or not canvas_channel:
-        return False
+        return None
+    document_content = {
+        "type": "markdown",
+        "markdown": f"# Application draft — {prospect['name']}\n\n{outline}",
+    }
     try:
         user_client = AsyncWebClient(
             token=user_token,
             base_url=os.environ.get("SLACK_API_URL", "https://slack.com/api/"),
         )
-        markdown = f"# Application draft — {prospect['name']}\n\n{outline}"
-        await user_client.conversations_canvases_create(
-            channel_id=canvas_channel,
-            document_content={"type": "markdown", "markdown": markdown},
-        )
-        return True
+        try:
+            created = await user_client.conversations_canvases_create(
+                channel_id=canvas_channel,
+                document_content=document_content,
+            )
+            canvas_id = created.get("canvas_id")
+        except SlackApiError as e:
+            if e.response.get("error") != "channel_canvas_already_exists":
+                raise
+            info = await client.conversations_info(channel=canvas_channel)
+            canvas_id = _channel_canvas_id(info.get("channel") or {})
+            if not canvas_id:
+                raise
+            await user_client.canvases_edit(
+                canvas_id=canvas_id,
+                changes=[
+                    {
+                        "operation": "replace",
+                        "document_content": document_content,
+                    }
+                ],
+            )
+
+        # Deep link straight to the doc — "open the channel canvas" sent
+        # people hunting; a clickable link doesn't.
+        from listeners.views.home_refresh import _get_workspace_url
+
+        base = await _get_workspace_url(client)
+        if base and canvas_id:
+            return f"{base.rstrip('/')}/docs/{team_id}/{canvas_id}"
+        return ""
     except SlackApiError as e:
         logger.warning(
             f"Canvas draft failed ({e.response.get('error')}); falling back to chat"
         )
-        return False
+        return None
     except Exception as e:
         logger.warning(f"Canvas draft failed ({e}); falling back to chat")
-        return False
+        return None

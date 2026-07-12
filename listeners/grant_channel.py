@@ -65,9 +65,13 @@ def _valid_iso_date(raw) -> str | None:
 
 
 def channel_topic_for(prospect: dict) -> str:
-    """Always-visible channel topic: deadline + size at a glance."""
+    """Always-visible channel topic: deadline + size at a glance. grant_size
+    is free text from the agent and can run to a whole sentence — keep the
+    topic scannable."""
     due = prospect.get("deadline_date") or "TBD"
     size = prospect.get("grant_size") or "verify on funder site"
+    if len(size) > 60:
+        size = size[:59].rstrip() + "…"
     return f"📅 Due {due} · 💰 {size} · brief pinned"
 
 
