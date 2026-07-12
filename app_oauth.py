@@ -17,7 +17,7 @@ from slack_sdk.oauth.state_store import FileOAuthStateStore
 
 from listeners import register_listeners
 from storage import init_db
-from webapi import start_web_api
+from webapi import handle_board
 
 load_dotenv(dotenv_path=".env", override=False)
 
@@ -137,12 +137,14 @@ async def main():
         logger.info("Connect workspace search (OAuth install): %s", install_url)
 
     server = app.server(port=port)
+    # Board API on the same port/domain as OAuth — cloud hosts (Railway)
+    # expose exactly one public port, and one stable URL serves everything:
+    # /slack/install, /slack/oauth_redirect, /api/board.
+    server.web_app.add_routes([web.get("/api/board", handle_board)])
     runner = web.AppRunner(server.web_app)
     await runner.setup()
     await web.TCPSite(runner, host=server.host, port=port).start()
-    logger.info("OAuth server listening on port %s", port)
-
-    await start_web_api()  # read-only board API for the Clew web app
+    logger.info("OAuth server + board API listening on port %s", port)
 
     handler = AsyncSocketModeHandler(app, os.environ.get("SLACK_APP_TOKEN"))
     await handler.start_async()

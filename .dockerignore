@@ -1,0 +1,17 @@
+.venv
+.git
+web/node_modules
+web/.next
+web/.vercel
+clew.db
+data/
+.env*
+!.env.sample
+logs/
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+clew.egg-info
+assets/
+docs/
