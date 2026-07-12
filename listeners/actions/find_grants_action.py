@@ -9,7 +9,7 @@ from agent import AgentDeps, run_agent
 from agent.org_context import prepend_org_profile
 from listeners.actions.origin import resolve_origin
 from listeners.events.tool_status import status_for
-from listeners.views.feedback_builder import build_feedback_blocks
+from listeners.views.agent_message import build_agent_message_blocks
 from listeners.views.setup_prompt_builder import build_profile_setup_blocks
 from storage import get_org_profile
 
@@ -81,8 +81,8 @@ async def handle_find_grants(
             await client.chat_postMessage(
                 channel=channel_id,
                 thread_ts=thread_ts,
-                text=response_text,
-                blocks=build_feedback_blocks(),
+                text="Grant search summary",
+                blocks=build_agent_message_blocks(response_text),
             )
     except Exception as e:
         logger.exception(f"Failed to run Find Grants: {e}")

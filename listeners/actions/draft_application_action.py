@@ -10,7 +10,7 @@ from agent import AgentDeps, run_agent
 from agent.org_context import prepend_org_profile
 from listeners.actions.origin import resolve_origin
 from listeners.events.tool_status import status_for
-from listeners.views.feedback_builder import build_feedback_blocks
+from listeners.views.agent_message import build_agent_message_blocks
 from storage import get_prospect
 
 DRAFT_APPLICATION_PROMPT = """\
@@ -98,8 +98,8 @@ async def handle_draft_application(
             await client.chat_postMessage(
                 channel=channel_id,
                 thread_ts=thread_ts,
-                text=response_text,
-                blocks=build_feedback_blocks(),
+                text=f"Application help for {prospect['name']}",
+                blocks=build_agent_message_blocks(response_text),
             )
     except Exception as e:
         logger.exception(f"Failed to draft application: {e}")
