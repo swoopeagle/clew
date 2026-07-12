@@ -33,6 +33,12 @@ Clew can see"** transparency panel.
 5️⃣ Bonus: ask Clew *"what federal grants has Mission Neighborhood Centers won?"* —
 real award history from USAspending, cited.
 
+**Where to talk to Clew:** the **Clew DM** is the personal cockpit (profile,
+`clew briefing`, private searches — no @mention needed); **any channel** works for
+team-visible asks (`@clew …`, grounded in that channel's history); each
+**#grant-… war room** is grant-scoped — `@clew` inside one already knows which
+grant you mean. No wrong door.
+
 🧵 Why "Clew"? It's the root of the word *clue* — Ariadne's thread through the
 labyrinth. A thread through the maze of funders to the ones that actually fit.
 

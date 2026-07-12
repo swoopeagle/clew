@@ -161,6 +161,22 @@ Open the app in Slack:
 4. Track everything on the **Home** tab — the pipeline funnel, the board, and the
    "What Clew can see" panel.
 
+**Which surface, when?** Clew lives in three places, each with a job:
+
+- **The Clew DM (Agents & Apps)** is your personal cockpit — set up or edit the
+  org profile, say `clew briefing` for the morning rundown, `reset clew` to wipe
+  the demo, and run private searches. No @mention needed; the **Home** tab next
+  to it is the dashboard.
+- **Regular channels** are for team-visible work — `@clew` it and the cited
+  cards, Approve/Pass decisions, and replies (grounded in that channel's recent
+  history) happen in the open where colleagues can weigh in.
+- **War rooms** (`#grant-…`) are per-grant workspaces Clew creates when you
+  Approve — inside one, `@clew` already knows which grant the room is for, with
+  the brief pinned, the deadline in the topic bar, and drafts in the canvas.
+
+There's no wrong door: Clew answers wherever it's asked — channels just need
+the @mention.
+
 ## Project structure
 
 - **`agent/`** — Claude Agent SDK configuration (`agent.py`), the nine MCP tools
