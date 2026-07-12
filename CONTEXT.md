@@ -1,26 +1,38 @@
 # CONTEXT.md — Clew: current state & the road to submission
 
-_Last updated: **Saturday July 11, 2026, late night** (Ian + Claude session). This
-supersedes the prior handoff. Read top to bottom before touching anything._
+_Last updated: **Saturday July 11, 2026, late night — second session** (Ian + Claude).
+This supersedes the prior handoff. Read top to bottom before touching anything._
 
 ---
 
-## 0. TL;DR of tonight
+## 0. TL;DR
 
 The build is **done and live-verified end to end**. What's left is almost entirely
 **submission logistics** (video, judge access, hosting) — not code.
 
-Tonight we: fixed a wrong-app bug, stood up **OAuth + Real-Time Search live**,
-shipped the **enforced-citation trust boundary** + a batch of hardening (from a
-Fable audit), redesigned the war-room brief, added a new **award-history tool**, an
-**App Home trust surface** + **pipeline funnel**, fixed markdown rendering, and
-produced the **Devpost draft, a redrawn architecture diagram, a walkthrough-grounded
-video script, and 5 reference GIFs**.
+**This second session (July 11 late night):** refreshed the README to match the real
+product (it still claimed "WIP, approve flow unverified, 6 tools"), added a paste-ready
+**judge "start here" pin** (`docs/judge-start-here.md`), tracked the previously-untracked
+`scripts/run_clew.sh`, and shipped **5 hardening fixes** from a pre-judging code review:
+(1) Approve is now an **atomic DB claim** — a double-click can't spawn a duplicate war
+room; (2) removed the unused **Slack-MCP server** (was arbitrary "act as the user" prompt-
+injection surface); (3) Find Grants no longer leaves "Searching…" frozen on error; (4)
+board bearer check is now **timing-safe**; (5) the citation gate now enforces **provenance**
+(a URL a tool actually returned), not just the host — so the trust-boundary pitch is now
+literally true. **Tests: 39 green** (was 33).
+
+**First session (earlier July 11):** fixed a wrong-app bug, stood up **OAuth + Real-Time
+Search live**, shipped the enforced-citation trust boundary, redesigned the war-room brief,
+added the **award-history tool**, an **App Home trust surface** + **pipeline funnel**, fixed
+markdown rendering, and produced the **Devpost draft, a redrawn architecture diagram, a
+walkthrough-grounded video script, and 5 reference GIFs**.
 
 ## 1. The competition
 
 - **Slack Agent Builder Challenge — "Agent for Good"**, $8k first / $4k second.
-- **Deadline: Sunday July 13, 2026, 5:00 PM PDT.** Aim to submit by ~2 PM Sunday.
+- **Deadline: Monday July 13, 2026, 5:00 PM PDT.** (July 13 is a *Monday* — the prior
+  handoff mislabeled it Sunday.) Today is Sat July 11, so there are **two full days
+  left** (Sun + Mon). Aim to submit by ~2 PM Monday, not at the wire.
 - Judging (25% each): Technological Implementation, Design, Potential Impact, Quality of the Idea.
 - Submission needs: text (draft ready → `docs/devpost.md`), architecture diagram
   (`docs/architecture.svg`, freshly redrawn), **~3-min demo video** (script ready →
@@ -36,9 +48,16 @@ video script, and 5 reference GIFs**.
 - **Run `app_oauth.py`, NOT `app.py`.** OAuth is installed; `app_oauth.py` is the
   runner that serves the Socket-Mode bot + OAuth + the board API on :3001. Running
   both = double-handling.
-- **OAuth install is persisted** to `data/installations/` — warm-path/Real-Time
-  Search survives restarts and tunnel death. The `:3000` tunnel is only needed to
-  (re)install OAuth, not for normal running.
+- **OAuth install is persisted** to `data/installations/none-T0BGGC4QGUB` (team
+  `T0BGGC4QGUB`) — warm-path/Real-Time Search survives restarts and tunnel death. The
+  `:3000` tunnel is only needed to (re)install OAuth, not for normal running.
+- **Real-Time Search status (as of this session): LIVE.** OAuth installed + persisted;
+  verified live last night (`search.messages` returned real results; warm-path fires in
+  Find Grants). Both `app_oauth.py` and the `:3000` tunnel were running at session end.
+- **Two different tunnels, don't confuse them.** `:3000` = OAuth install (running now).
+  `:3001` = the **web-board API** that Vercel reads. As of session end **no `:3001`
+  tunnel was running**, so the public web board can't reach this machine yet — that's the
+  Jay dependency (see §5).
 - **DB was re-seeded** tonight for a clean onboarding GIF. Current `clew.db` =
   **TEL HI profile only, no prospects.** Click **Find Grants** once (~2–3 min) to
   repopulate before recording. (Ian's local DB is now authoritative; Jay's older DB
@@ -93,7 +112,7 @@ cloudflared tunnel --url http://localhost:3000
 #   set CLEW_AGENT_MODEL=claude-opus-4-8 in .env, restart
 
 # checks
-.venv/bin/python -m pytest              # 33 green
+.venv/bin/python -m pytest              # 39 green
 .venv/bin/ruff check . && .venv/bin/ruff format .
 ```
 
@@ -101,23 +120,53 @@ Secrets live in `.env` (gitignored): `A0BGUBZF23E` bot+app tokens, the three OAu
 creds, `ANTHROPIC_API_KEY`. **These were pasted in chat during setup — rotate the
 Anthropic key + regenerate Slack tokens right after submitting Sunday.**
 
-## 5. Remaining checklist (in priority order, with owners)
+## 5. Ian's action items (Sunday) + the Jay dependency
 
-1. **Record the ~3-min video** — _Ian + video guy._ Script + 5 reference GIFs ready.
-   Re-seed reminder: click Find Grants first to repopulate the demo pipeline. Flip to
-   Opus for the take. (THE long pole — worth more than any feature.)
-2. **Devpost** — _Ian._ Create project, paste `docs/devpost.md`, fill fields, upload
-   video. (Can scaffold everything except the video tonight.)
-3. **Judge access** — _Ian._ Invite slackhack@salesforce.com + testing@devpost.com as
-   FULL members. Do AFTER cleanup + video (they poke immediately). Pin a "start here"
-   in a clean #demo channel.
-4. **App hygiene** — _Ian, morning/fresh eyes._ Delete OLD app `A0BG7GBD4CX` (NOT
-   `A0BGUBZF23E`); confirm name "Clew" + icon (assets/).
-5. **Hosting through Sun 5 PM** — _Ian._ `bash scripts/run_clew.sh` on a plugged-in,
-   awake machine. The `:3001` board tunnel + Vercel re-point is the web-board risk.
-6. **Web board / Vercel** — _Jay + Ian._ Decide ownership; if the trycloudflare URL
-   rotates, re-point `CLEW_API_URL` on Vercel (see prior notes) or the board 403s.
-7. **Rotate secrets** — _Ian, after submission._
+### Does Ian's list block Jay? — mostly NO. One coupling.
+
+Jay owns the **web board / Vercel**. For Jay to do anything with the live board he needs:
+(a) the bot running on Ian's machine, (b) a public tunnel to **`:3001`** (the board API),
+and (c) that tunnel URL set as `CLEW_API_URL` on Vercel. Right now **only the `:3000`
+OAuth tunnel is up — there is no `:3001` tunnel** — so the live board can't reach Ian's
+machine, and Jay is blocked until Ian provides a `:3001` URL.
+
+- **If Jay might touch the board Sunday → do this TONIGHT so you don't block him:**
+  ```sh
+  cloudflared tunnel --url http://localhost:3001   # separate tab from the :3000 one
+  ```
+  Grab the printed `https://<random>.trycloudflare.com` URL and send it to Jay (he sets
+  it as `CLEW_API_URL` on Vercel). While app_oauth.py is running, `:3001` already serves
+  `GET /api/board`, so the tunnel is all that's missing.
+- **Everything else Ian does is independent of Jay** — video, Devpost, judge invites,
+  deleting the old app, secret rotation. None of it touches Jay's work.
+
+### Tomorrow (Sunday), priority order — all Ian unless noted
+
+1. **Record the ~3-min video** — _Ian (+ video guy)._ THE long pole. Script +
+   5 reference GIFs ready. First run `bash scripts/run_clew.sh`, click **Find Grants**
+   once (~2–3 min) to repopulate the reseeded demo pipeline, and confirm `.env` has
+   `CLEW_AGENT_MODEL` unset or `=claude-opus-4-8` (code already defaults to Opus).
+2. **Devpost** — _Ian._ Create project, paste `docs/devpost.md` section-by-section,
+   upload `docs/architecture.svg`, add "Built with" tags, then the video URL. Save as
+   draft; submit by ~2 PM **Monday**.
+3. **App hygiene** — _Ian, fresh eyes._ Delete OLD app `A0BG7GBD4CX` (**NOT**
+   `A0BGUBZF23E` — verify the ID before clicking); confirm name "Clew" + icon (assets/);
+   archive orphaned `#grant-…` channels from old runs.
+4. **Judge access** — _Ian._ Invite slackhack@salesforce.com + testing@devpost.com as
+   FULL members — AFTER #1–3 (they poke immediately). Create a clean `#demo` channel and
+   pin the copy in `docs/judge-start-here.md`.
+5. **Hosting through Mon 5 PM** — _Ian._ `bash scripts/run_clew.sh` on a plugged-in,
+   awake machine. Add the `:3001` board tunnel (above) if the web board must stay up.
+6. **Web board / Vercel** — _Jay + Ian._ Jay re-points `CLEW_API_URL` whenever the
+   trycloudflare URL rotates, or the board 403s/502s. Unblocked once Ian shares `:3001`.
+7. **Rotate secrets** — _Ian, AFTER submission Monday._ Anthropic key + Slack tokens
+   (pasted in chat during setup).
+
+### Do-tonight decision
+The only thing worth doing tonight instead of tomorrow is the **`:3001` tunnel URL for
+Jay** — and only if Jay plans to work on the board Sunday. If he's waiting on you either
+way, stand it up now (2 min) and drop him the URL. Otherwise everything can wait for
+tomorrow.
 
 ## 6. Roadmap (for Devpost "What's next")
 
