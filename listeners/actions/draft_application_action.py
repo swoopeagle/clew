@@ -16,12 +16,18 @@ from listeners.views.agent_message import build_agent_message_blocks
 from storage import get_prospect
 
 DRAFT_APPLICATION_PROMPT = """\
-Help us apply for this approved grant prospect. Produce your APPLICATION HELP \
-deliverable: fit summary, application outline (need statement, program \
-description, outcomes/evaluation, budget narrative bullets), 2-3 reusable \
-boilerplate paragraphs in our voice, and a requirements checklist with \
-anything unverified marked "VERIFY on the funder's site". Research the funder \
-with your search tools first if useful.
+Help us apply for this approved grant prospect. RESEARCH FIRST: fetch the \
+prospect's application_url and the funder's own website with fetch_webpage \
+(plus your search tools) to find the actual application portal, current \
+deadline, and stated requirements — do NOT skip this step. Then produce your \
+APPLICATION HELP deliverable, and START it with "🔗 Apply here:" giving the \
+exact application URL and confirmed deadline (or, if you truly couldn't find \
+the portal after fetching, say which pages you checked). Follow with: fit \
+summary, application outline (need statement, program description, \
+outcomes/evaluation, budget narrative bullets), 2-3 reusable boilerplate \
+paragraphs in our voice, and a checklist of the funder's stated requirements \
+— mark an item "VERIFY on the funder's site" only if you fetched and still \
+couldn't confirm it.
 
 PROSPECT:
 {prospect_json}
@@ -80,6 +86,7 @@ async def handle_draft_application(
                     "fit_rationale",
                     "fit_sources",
                     "deadline_date",
+                    "application_url",
                 )
             },
             default=str,

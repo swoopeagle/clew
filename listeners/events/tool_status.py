@@ -8,6 +8,7 @@ TOOL_STATUS = {
     "get_org_award_history": "🏛️ Pulling your federal award history…",
     "search_workspace": "🧵 Checking your workspace for warm paths…",
     "fetch_org_website": "🌐 Reading your website…",
+    "fetch_webpage": "🌐 Reading the funder's site…",
     "save_org_profile": "💾 Saving your org profile…",
     "save_qualified_prospect": "✅ Posting a qualified prospect…",
 }

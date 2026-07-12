@@ -23,9 +23,12 @@ from storage import update_prospect
 
 GRANT_BRIEF_PROMPT = """\
 We just approved this grant prospect and opened a dedicated channel for it. \
-Research the funder with your search tools first, then produce a GRANT BRIEF as \
-a SINGLE JSON object and nothing else — no prose, no code fence. Use EXACTLY \
-these keys:
+Research the funder first: fetch its application_url and/or the funder's own \
+website with fetch_webpage (grants.gov detail pages may not render — use the \
+search tools' own data for those) and use your search tools, so the brief \
+carries the REAL apply link and deadline instead of "verify" placeholders \
+wherever they genuinely exist. Then produce a GRANT BRIEF as a SINGLE JSON \
+object and nothing else — no prose, no code fence. Use EXACTLY these keys:
 
 {{
   "funder": "<funder / opportunity name>",
@@ -41,7 +44,8 @@ these keys:
 
 Trust rules: never invent amounts, deadlines, or facts. Anything a source does \
 not support goes in "verify", never in "confirmed" or the amount/deadline \
-fields. Keep each bullet TELEGRAPHIC — a fragment of ~3-7 words, not a sentence \
+fields. If you found the application/portal page, put its link FIRST in \
+"sources" with the label "Apply here". Keep each bullet TELEGRAPHIC — a fragment of ~3-7 words, not a sentence \
 (e.g. "Award size range", not "We still need to confirm the award size range"). \
 Output the JSON object only.
 
