@@ -12,7 +12,11 @@ from zoneinfo import ZoneInfo
 
 from slack_sdk.web.async_client import AsyncWebClient
 
-from storage import get_prospects_grouped_by_stage, list_briefing_targets
+from storage import (
+    get_prospects_grouped_by_stage,
+    list_briefing_targets,
+    list_open_tasks_by_org,
+)
 
 BRIEFING_PHRASES = {"clew briefing", "briefing", "/briefing"}
 _BRIEFING_TZ = ZoneInfo("America/Los_Angeles")
@@ -28,6 +32,13 @@ def _days_until(iso: str | None) -> int | None:
         return (date.fromisoformat(iso) - date.today()).days
     except (ValueError, TypeError):
         return None
+
+
+def _tasks_by_prospect(team_id: str) -> dict[int, list[dict]]:
+    grouped: dict[int, list[dict]] = {}
+    for task in list_open_tasks_by_org(team_id):
+        grouped.setdefault(task["prospect_id"], []).append(task)
+    return grouped
 
 
 def build_briefing_blocks(team_id: str) -> list[dict]:
@@ -73,6 +84,19 @@ def build_briefing_blocks(team_id: str) -> list[dict]:
                     f":page_facing_up: *{row['name']}* report due {row['report_due_date']}"
                 )
 
+    # Open task rollup — one line per grant that has work in flight.
+    for tasks in _tasks_by_prospect(team_id).values():
+        unassigned = sum(1 for t in tasks if not t.get("assignee_user_id"))
+        where = (
+            f"<#{tasks[0]['grant_channel_id']}>"
+            if tasks[0].get("grant_channel_id")
+            else f"*{tasks[0]['prospect_name']}*"
+        )
+        note = f", *{unassigned} unassigned*" if unassigned else ""
+        lines.append(
+            f":jigsaw: {where} — {len(tasks)} task{'s' if len(tasks) != 1 else ''} open{note}"
+        )
+
     if not lines:
         body = (
             "No fires today — no deadlines within a week, nothing waiting on "
@@ -108,6 +132,71 @@ async def post_briefing(client: AsyncWebClient, channel_id: str, team_id: str) -
     )
 
 
+def build_war_room_nudges(team_id: str) -> list[tuple[str, str]]:
+    """(channel_id, message) pairs for war rooms that need a push today:
+    a deadline within 3 days, or open tasks nobody owns. Channel mentions
+    ping people — the DM briefing can't."""
+    grouped = get_prospects_grouped_by_stage(team_id)
+    tasks_by_prospect = _tasks_by_prospect(team_id)
+    nudges: list[tuple[str, str]] = []
+
+    for stage in ("approved", "applied"):
+        for row in grouped.get(stage, []):
+            channel = row.get("grant_channel_id")
+            if not channel:
+                continue
+            parts: list[str] = []
+
+            days = _days_until(row.get("deadline_date"))
+            if days is not None and 0 <= days <= 3:
+                parts.append(
+                    f":alarm_clock: *{days} day{'s' if days != 1 else ''}* to the "
+                    f"*{row['name']}* deadline ({row['deadline_date']})."
+                )
+
+            tasks = tasks_by_prospect.get(row["id"], [])
+            unassigned = [t for t in tasks if not t.get("assignee_user_id")]
+            assigned = [t for t in tasks if t.get("assignee_user_id")]
+            if unassigned:
+                items = "  ·  ".join(t["description"] for t in unassigned[:3])
+                parts.append(
+                    f":jigsaw: *{len(unassigned)} task{'s' if len(unassigned) != 1 else ''} "
+                    f"still unassigned:* {items} — click :clipboard: *Tasks* to hand them off."
+                )
+            if parts and assigned:
+                owners = "  ·  ".join(
+                    f"<@{t['assignee_user_id']}> — {t['description']}"
+                    for t in assigned[:3]
+                )
+                parts.append(f":black_square_button: Still open: {owners}")
+
+            if parts:
+                nudges.append((channel, "\n".join(parts)))
+
+    return nudges
+
+
+async def post_war_room_nudges(
+    client: AsyncWebClient, team_id: str, logger: Logger | None = None
+) -> None:
+    nudges = await asyncio.to_thread(build_war_room_nudges, team_id)
+    for channel_id, message in nudges:
+        try:
+            await client.chat_postMessage(
+                channel=channel_id,
+                text=message,
+                blocks=[
+                    {
+                        "type": "section",
+                        "text": {"type": "mrkdwn", "text": message},
+                    }
+                ],
+            )
+        except Exception as e:
+            if logger:
+                logger.warning(f"Nudge failed for {channel_id}: {e}")
+
+
 def _seconds_until_next_briefing() -> float:
     now = datetime.now(_BRIEFING_TZ)
     target = now.replace(hour=_BRIEFING_HOUR, minute=0, second=0, microsecond=0)
@@ -127,6 +216,7 @@ async def briefing_loop(client: AsyncWebClient, logger: Logger) -> None:
                     await post_briefing(
                         client, target["briefing_channel_id"], target["org_id"]
                     )
+                    await post_war_room_nudges(client, target["org_id"], logger)
                 except Exception as e:
                     logger.warning(f"Briefing failed for {target['org_id']}: {e}")
         except asyncio.CancelledError:

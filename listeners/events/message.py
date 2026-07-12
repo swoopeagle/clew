@@ -18,7 +18,11 @@ from listeners.actions.reset_action import (
     build_reset_confirmation_blocks,
     is_reset_request,
 )
-from listeners.briefing import is_briefing_request, post_briefing
+from listeners.briefing import (
+    is_briefing_request,
+    post_briefing,
+    post_war_room_nudges,
+)
 from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
 from listeners.views.setup_prompt_builder import (
@@ -82,6 +86,9 @@ async def handle_message(
             team_id = context.team_id or "default"
             await asyncio.to_thread(set_briefing_channel, team_id, channel_id)
             await post_briefing(client, channel_id, team_id)
+            # Same pass the 9am run makes: nudge war rooms that need a push
+            # (imminent deadlines, unowned tasks) — mentions ping people there.
+            await post_war_room_nudges(client, team_id, logger)
             return
 
         # Get session ID for conversation context

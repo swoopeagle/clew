@@ -105,3 +105,104 @@ def test_clean_user_id_accepts_mention_forms():
     assert _clean_user_id("<@U0123ABC|jay>") == "U0123ABC"
     assert _clean_user_id("not-a-user") is None
     assert _clean_user_id(None) is None
+
+
+def test_org_wide_task_queries():
+    from storage import (
+        count_tasks_by_prospect,
+        list_open_tasks_by_org,
+        update_prospect,
+    )
+
+    pid = _prospect(org_id="Torg")
+    update_prospect(pid, grant_channel_id="C_ROOM")
+    other_org = _prospect(org_id="Tother", name="Elsewhere Fund")
+
+    t1 = create_task(org_id="Torg", prospect_id=pid, description="Unowned work")
+    t2 = create_task(
+        org_id="Torg", prospect_id=pid, description="Owned work",
+        assignee_user_id="U1",
+    )
+    done = create_task(org_id="Torg", prospect_id=pid, description="Finished")
+    complete_task(done)
+    create_task(org_id="Tother", prospect_id=other_org, description="Not ours")
+
+    open_tasks = list_open_tasks_by_org("Torg")
+    assert {t["id"] for t in open_tasks} == {t1, t2}
+    assert all(t["prospect_name"] == "Acme Fund" for t in open_tasks)
+    assert all(t["grant_channel_id"] == "C_ROOM" for t in open_tasks)
+
+    counts = count_tasks_by_prospect("Torg")
+    assert counts[pid] == {"open": 2, "done": 1}
+
+
+def test_briefing_includes_task_rollup():
+    from listeners.briefing import build_briefing_blocks
+    from storage import update_prospect
+
+    pid = _prospect(org_id="Trollup")
+    update_prospect(pid, grant_channel_id="C_NUDGE")
+    create_task(org_id="Trollup", prospect_id=pid, description="Get financials")
+    create_task(
+        org_id="Trollup", prospect_id=pid, description="Draft budget",
+        assignee_user_id="U9",
+    )
+
+    text = str(build_briefing_blocks("Trollup"))
+    assert "C_NUDGE" in text
+    assert "2 tasks open" in text
+    assert "1 unassigned" in text
+
+
+def test_war_room_nudges_deadline_and_unassigned():
+    from datetime import date, timedelta
+
+    from listeners.briefing import build_war_room_nudges
+    from storage import update_prospect
+
+    soon = (date.today() + timedelta(days=2)).isoformat()
+    pid = _prospect(org_id="Tnudge")
+    update_prospect(
+        pid, stage="approved", grant_channel_id="C_WAR", deadline_date=soon
+    )
+    create_task(org_id="Tnudge", prospect_id=pid, description="Collect 990s")
+    create_task(
+        org_id="Tnudge", prospect_id=pid, description="Write narrative",
+        assignee_user_id="U7",
+    )
+
+    nudges = build_war_room_nudges("Tnudge")
+    assert len(nudges) == 1
+    channel, message = nudges[0]
+    assert channel == "C_WAR"
+    assert "2 day" in message
+    assert "Collect 990s" in message
+    assert "<@U7>" in message
+
+    # Far deadline + fully assigned tasks -> no nudge.
+    far = (date.today() + timedelta(days=30)).isoformat()
+    pid2 = _prospect(org_id="Tquiet", name="Quiet Fund")
+    update_prospect(
+        pid2, stage="approved", grant_channel_id="C_QUIET", deadline_date=far
+    )
+    create_task(
+        org_id="Tquiet", prospect_id=pid2, description="Owned",
+        assignee_user_id="U1",
+    )
+    assert build_war_room_nudges("Tquiet") == []
+
+
+def test_home_tasks_in_flight_line():
+    from listeners.views.app_home_builder import _tasks_in_flight
+
+    assert _tasks_in_flight([]) is None
+    line = _tasks_in_flight(
+        [
+            {"prospect_id": 1, "grant_channel_id": "C1", "assignee_user_id": None},
+            {"prospect_id": 1, "grant_channel_id": "C1", "assignee_user_id": "U1"},
+            {"prospect_id": 2, "grant_channel_id": "C2", "assignee_user_id": None},
+        ]
+    )
+    assert "3 tasks in flight" in line
+    assert "2 war rooms" in line
+    assert "2 unassigned" in line

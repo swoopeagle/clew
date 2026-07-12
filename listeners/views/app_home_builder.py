@@ -87,6 +87,21 @@ def _pipeline_funnel(board: dict[str, list[dict]]) -> str | None:
     return "  →  ".join(stages)
 
 
+def _tasks_in_flight(open_tasks: list[dict]) -> str | None:
+    """One glanceable line: how much handed-off work is moving right now."""
+    if not open_tasks:
+        return None
+    rooms = {t.get("grant_channel_id") or t["prospect_id"] for t in open_tasks}
+    unassigned = sum(1 for t in open_tasks if not t.get("assignee_user_id"))
+    text = (
+        f":jigsaw: *{len(open_tasks)} task{'s' if len(open_tasks) != 1 else ''} "
+        f"in flight* across {len(rooms)} war room{'s' if len(rooms) != 1 else ''}"
+    )
+    if unassigned:
+        text += f"  ·  *{unassigned} unassigned* — hand them off in the war room"
+    return text
+
+
 def _visibility_block(visible: dict) -> dict:
     """Trust/observability section: exactly which spaces Clew can see, queried
     live from Slack. Reinforces that Clew only reads what it's invited to."""
@@ -119,6 +134,7 @@ def build_app_home_view(
     workspace_url: str | None = None,
     team_id: str | None = None,
     visible_channels: dict | None = None,
+    open_tasks: list[dict] | None = None,
 ) -> dict:
     """Build the App Home Block Kit view: hero, org profile summary (or
     onboarding steps), action buttons, pipeline summary, and the grant board.
@@ -217,6 +233,15 @@ def build_app_home_view(
     funnel = _pipeline_funnel(board)
     if funnel:
         blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": funnel}})
+
+    tasks_line = _tasks_in_flight(open_tasks or [])
+    if tasks_line:
+        blocks.append(
+            {
+                "type": "context",
+                "elements": [{"type": "mrkdwn", "text": tasks_line}],
+            }
+        )
 
     if is_connected:
         blocks.append(

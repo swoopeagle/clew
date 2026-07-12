@@ -367,6 +367,46 @@ def list_tasks(prospect_id: int) -> list[dict]:
         conn.close()
 
 
+def list_open_tasks_by_org(org_id: str) -> list[dict]:
+    """Every open task across the org's grants, with the grant's name and
+    war-room channel attached — powers the briefing rollup, home dashboard,
+    and war-room nudges."""
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            """
+            SELECT t.*, p.name AS prospect_name, p.grant_channel_id
+            FROM grant_tasks t
+            JOIN prospects p ON p.id = t.prospect_id
+            WHERE t.org_id = ? AND t.status = 'open'
+            ORDER BY t.prospect_id, t.id
+            """,
+            (org_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def count_tasks_by_prospect(org_id: str) -> dict[int, dict[str, int]]:
+    """{prospect_id: {"open": n, "done": n}} for every grant with tasks."""
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT prospect_id, status, COUNT(*) AS n FROM grant_tasks "
+            "WHERE org_id = ? GROUP BY prospect_id, status",
+            (org_id,),
+        ).fetchall()
+        counts: dict[int, dict[str, int]] = {}
+        for row in rows:
+            entry = counts.setdefault(row["prospect_id"], {"open": 0, "done": 0})
+            key = "open" if row["status"] == "open" else "done"
+            entry[key] += row["n"]
+        return counts
+    finally:
+        conn.close()
+
+
 def set_task_assignee(task_id: int, assignee_user_id: str) -> None:
     conn = _connect()
     try:
