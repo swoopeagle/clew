@@ -30,6 +30,11 @@ async def handle_find_grants(
     logger: Logger,
 ):
     await ack()
+    # Tracked outside the try so the error path can replace the "Searching…"
+    # placeholder instead of leaving it frozen forever (the exact failure mode
+    # the per-source timeouts were meant to prevent).
+    channel_id: str | None = None
+    progress_ts: str | None = None
     try:
         user_id = body["user"]["id"]
         team_id = context.team_id or "default"
@@ -86,3 +91,17 @@ async def handle_find_grants(
             )
     except Exception as e:
         logger.exception(f"Failed to run Find Grants: {e}")
+        # Never leave the "Searching…" placeholder spinning. Turn it into a
+        # plain, honest retry prompt.
+        if channel_id and progress_ts:
+            try:
+                await client.chat_update(
+                    channel=channel_id,
+                    ts=progress_ts,
+                    text=(
+                        ":warning: The grant search hit a snag and didn't finish. "
+                        "Please click *Find Grants* to try again."
+                    ),
+                )
+            except Exception:
+                pass

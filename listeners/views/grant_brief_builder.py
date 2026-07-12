@@ -93,7 +93,8 @@ def build_grant_brief_blocks(data: dict, fallback_name: str = "") -> list[dict]:
 
     sources = data.get("sources") or []
     links = "  ·  ".join(
-        f"<{s['url']}|{s.get('label') or 'source'}>" if isinstance(s, dict) and s.get("url")
+        f"<{s['url']}|{s.get('label') or 'source'}>"
+        if isinstance(s, dict) and s.get("url")
         else str(s.get("label") if isinstance(s, dict) else s)
         for s in sources
     )
@@ -101,7 +102,9 @@ def build_grant_brief_blocks(data: dict, fallback_name: str = "") -> list[dict]:
         blocks.append(
             {
                 "type": "context",
-                "elements": [{"type": "mrkdwn", "text": f":paperclip: *Sources:* {links}"}],
+                "elements": [
+                    {"type": "mrkdwn", "text": f":paperclip: *Sources:* {links}"}
+                ],
             }
         )
 

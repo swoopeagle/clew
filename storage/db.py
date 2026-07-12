@@ -264,6 +264,24 @@ def update_prospect(prospect_id: int, **fields) -> None:
         conn.close()
 
 
+def claim_prospect_stage(prospect_id: int, from_stage: str, to_stage: str) -> bool:
+    """Atomically move a prospect from one stage to another, but only if it is
+    still in ``from_stage``. Returns True if this call made the transition,
+    False if the row was already past ``from_stage`` (e.g. a double-clicked
+    Approve button). The single UPDATE ... WHERE stage = ? is the atomic guard,
+    so two near-simultaneous clicks can't both spin up a war room."""
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE prospects SET stage = ?, updated_at = ? WHERE id = ? AND stage = ?",
+            (to_stage, _now(), prospect_id, from_stage),
+        )
+        conn.commit()
+        return cur.rowcount == 1
+    finally:
+        conn.close()
+
+
 def get_prospects_grouped_by_stage(org_id: str) -> dict[str, list[dict]]:
     conn = _connect()
     try:

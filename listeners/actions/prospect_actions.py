@@ -15,7 +15,7 @@ from listeners.views.lifecycle_builders import (
     build_declined_modal,
 )
 from listeners.views.prospect_card_builder import build_decided_card_blocks
-from storage import get_prospect, update_prospect
+from storage import claim_prospect_stage, get_prospect, update_prospect
 
 
 async def _warm_path_hint(user_token: str | None, funder_name: str) -> str | None:
@@ -49,6 +49,21 @@ async def handle_approve_prospect(
     await ack()
     try:
         prospect_id = int(body["actions"][0]["value"])
+
+        # Atomically claim the approval: only the click that actually moves the
+        # prospect out of "qualified" proceeds. A double-click (the button stays
+        # live for the second or two before chat_update swaps the card) would
+        # otherwise spin up a duplicate war room and a second multi-minute brief.
+        claimed = await asyncio.to_thread(
+            claim_prospect_stage, prospect_id, "qualified", "approved"
+        )
+        if not claimed:
+            logger.info(
+                f"Prospect {prospect_id} already approved/decided — ignoring "
+                "duplicate Approve click."
+            )
+            return
+
         # Open the deadline modal (trigger_id expires ~3s after the click). If it
         # fails, approval must still proceed — the deadline can be set later, but
         # the war room and stage change should never be lost to a dead trigger.
@@ -60,7 +75,6 @@ async def handle_approve_prospect(
         except SlackApiError as e:
             logger.warning(f"Deadline modal did not open ({e}); approving anyway.")
 
-        await asyncio.to_thread(update_prospect, prospect_id, stage="approved")
         prospect = await asyncio.to_thread(get_prospect, prospect_id)
 
         if prospect.get("slack_channel_id") and prospect.get("slack_message_ts"):

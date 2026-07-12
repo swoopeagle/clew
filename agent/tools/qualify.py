@@ -7,26 +7,31 @@ qualified prospect without a citation attached.
 """
 
 import asyncio
-from urllib.parse import urlparse
 
 from claude_agent_sdk import tool
 
 from agent.context import agent_deps_var
+from agent.tools.citations import normalize_citation_url
 from storage import find_prospect_by_identity, insert_prospect, update_prospect
 
-# The only hosts our search tools actually emit. A citation on any other host
-# didn't come from a tool result — so it can't back a qualified prospect.
-_ALLOWED_CITATION_HOSTS = ("grants.gov", "propublica.org", "usaspending.gov")
 
-
-def _valid_citation(url: object) -> bool:
-    if not isinstance(url, str):
-        return False
-    parsed = urlparse(url.strip())
-    if parsed.scheme not in ("http", "https") or not parsed.netloc:
-        return False
-    host = parsed.netloc.lower().split(":")[0]
-    return any(host == h or host.endswith("." + h) for h in _ALLOWED_CITATION_HOSTS)
+def _accepted_citations(fit_sources, emitted_urls: set[str]) -> list[str]:
+    """Filter fit_sources down to citations that clear the trust boundary: a
+    valid http(s) URL on a source domain we query AND — when the run actually
+    returned any citable URLs — one the search tools genuinely emitted. The
+    provenance check is what stops a well-formed but never-returned link (a
+    hallucinated grants.gov detail URL) from backing a prospect; it falls back
+    to the domain check alone if nothing was emitted, so a legitimate save
+    can't be blocked just because provenance tracking has no data."""
+    accepted = []
+    for url in fit_sources or []:
+        normalized = normalize_citation_url(url)
+        if normalized is None:
+            continue  # not a valid URL on a source domain we query
+        if emitted_urls and normalized not in emitted_urls:
+            continue  # well-formed, but no search tool actually returned it
+        accepted.append(url)
+    return accepted
 
 
 def _rejection(text: str) -> dict:
@@ -97,15 +102,16 @@ async def save_qualified_prospect_tool(args):
     deps = agent_deps_var.get()
 
     # Trust boundary, enforced (not just requested): a prospect can only be
-    # shortlisted with a real citation from a search tool. Drop anything that
-    # isn't a URL on a source domain we actually query; refuse if none remain.
-    citations = [s for s in (args.get("fit_sources") or []) if _valid_citation(s)]
+    # shortlisted with a real citation a search tool actually returned. Drop
+    # anything that isn't such a URL; refuse if none remain.
+    citations = _accepted_citations(args.get("fit_sources"), deps.emitted_urls)
     if not citations:
         return _rejection(
             "REJECTED: save_qualified_prospect needs at least one real citation URL "
-            "from a search tool (a grants.gov, propublica.org, or usaspending.gov "
-            "link). Do not shortlist a prospect you cannot cite — re-run the search "
-            "tools and cite an actual result, or skip this prospect."
+            "returned by a search tool (a grants.gov, propublica.org, or "
+            "usaspending.gov link from an actual tool result). Do not shortlist a "
+            "prospect you cannot cite — re-run the search tools and cite a result "
+            "they returned, or skip this prospect."
         )
 
     # Don't shortlist the same funder twice (e.g. Find Grants run more than once).

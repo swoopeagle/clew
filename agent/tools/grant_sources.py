@@ -12,6 +12,8 @@ from datetime import date, timedelta
 import aiohttp
 from claude_agent_sdk import tool
 
+from agent.tools.citations import register_emitted_urls
+
 GRANTS_GOV_SEARCH_URL = "https://api.grants.gov/v1/api/search2"
 PROPUBLICA_SEARCH_URL = "https://projects.propublica.org/nonprofits/api/v2/search.json"
 PROPUBLICA_ORG_URL = (
@@ -82,6 +84,7 @@ async def search_grants_gov_tool(args):
         }
         for hit in hits
     ]
+    register_emitted_urls(r["url"] for r in results)
     return _text_result(
         {
             "source": "grants_gov",
@@ -139,6 +142,7 @@ async def search_propublica_orgs_tool(args):
         }
         for org in orgs
     ]
+    register_emitted_urls(r["url"] for r in results)
     return _text_result(
         {
             "source": "propublica",
@@ -198,13 +202,15 @@ async def get_990_filings_tool(args):
         }
         for f in filings
     ]
+    org_url = f"https://projects.propublica.org/nonprofits/organizations/{ein}"
+    register_emitted_urls([org_url])
     return _text_result(
         {
             "source": "propublica",
             "ein": ein,
             "name": org.get("name"),
             "subsection_code": org.get("subsection_code"),
-            "url": f"https://projects.propublica.org/nonprofits/organizations/{ein}",
+            "url": org_url,
             "recent_filings": results,
         }
     )
@@ -285,6 +291,7 @@ async def search_usaspending_tool(args):
         }
         for r in data.get("results", [])
     ]
+    register_emitted_urls(r["url"] for r in results)
     return _text_result({"source": "usaspending", "results": results})
 
 
@@ -367,6 +374,7 @@ async def get_org_award_history_tool(args):
         }
         for r in data.get("results", [])
     ]
+    register_emitted_urls(r["url"] for r in results)
     return _text_result(
         {
             "source": "usaspending",

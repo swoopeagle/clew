@@ -1,4 +1,5 @@
 from storage import (
+    claim_prospect_stage,
     get_org_profile,
     get_prospect,
     get_prospects_grouped_by_stage,
@@ -6,6 +7,27 @@ from storage import (
     update_prospect,
     upsert_org_profile,
 )
+
+
+def test_claim_prospect_stage_is_single_winner():
+    """A double-clicked Approve must only fire once: the first claim wins, the
+    second sees the row already past 'qualified' and returns False."""
+    prospect_id = insert_prospect(
+        org_id="T1",
+        name="Acme Foundation",
+        source="propublica",
+        source_ref=None,
+        program_area=None,
+        geography=None,
+        grant_size=None,
+        fit_rationale="fits",
+        fit_sources=["https://projects.propublica.org/nonprofits/organizations/1"],
+    )
+
+    assert claim_prospect_stage(prospect_id, "qualified", "approved") is True
+    assert get_prospect(prospect_id)["stage"] == "approved"
+    # Second click: already approved, so no re-claim (no duplicate war room).
+    assert claim_prospect_stage(prospect_id, "qualified", "approved") is False
 
 
 def test_org_profile_roundtrip():

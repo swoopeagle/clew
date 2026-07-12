@@ -9,7 +9,6 @@ from claude_agent_sdk import (
     ToolUseBlock,
     create_sdk_mcp_server,
 )
-from claude_agent_sdk.types import McpHttpServerConfig
 
 from agent.context import agent_deps_var
 from agent.deps import AgentDeps
@@ -143,8 +142,6 @@ grant_tools_server = create_sdk_mcp_server(
     ],
 )
 
-SLACK_MCP_URL = "https://mcp.slack.com/mcp"
-
 DEFAULT_MODEL = "claude-opus-4-8"
 
 AGENT_TOOLS = [
@@ -164,7 +161,11 @@ AGENT_TOOLS = [
 
 # The SDK agent runs on the host machine with Claude Code's built-in tools
 # available by default. Clew is a grant assistant, not a coding agent — it
-# must never read the project source, the filesystem, or run commands.
+# must never read the project source, the filesystem, or run commands. We do
+# NOT connect the hosted Slack MCP: the only Slack action Clew needs is
+# workspace search, which its own `search_workspace` tool does with a narrow
+# user-token call — so the agent never gets a general "act in Slack as the
+# user" capability that injected text in a tool result could hijack.
 DISALLOWED_TOOLS = [
     "Bash",
     "BashOutput",
@@ -208,14 +209,6 @@ async def run_agent(
 
     mcp_servers: dict = {"clew-grant-tools": grant_tools_server}
     allowed_tools = list(AGENT_TOOLS)
-
-    if deps and deps.user_token:
-        mcp_servers["slack-mcp"] = McpHttpServerConfig(
-            type="http",
-            url=SLACK_MCP_URL,
-            headers={"Authorization": f"Bearer {deps.user_token}"},
-        )
-        allowed_tools.append("mcp__slack-mcp__*")
 
     options = ClaudeAgentOptions(
         system_prompt=SYSTEM_PROMPT,

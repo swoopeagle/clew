@@ -159,7 +159,9 @@ async def create_grant_channel(
                 posted = await client.chat_postMessage(
                     channel=channel_id,
                     text=f"Grant brief: {data.get('funder', prospect['name'])}",
-                    blocks=build_grant_brief_blocks(data, fallback_name=prospect["name"]),
+                    blocks=build_grant_brief_blocks(
+                        data, fallback_name=prospect["name"]
+                    ),
                 )
             else:
                 # Parsing failed — post the raw text so a brief always lands.

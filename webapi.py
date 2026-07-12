@@ -42,7 +42,8 @@ def _authorized(request: web.Request) -> bool:
     token = os.environ.get("CLEW_API_TOKEN")
     if not token:
         return True
-    return request.headers.get("Authorization") == f"Bearer {token}"
+    provided = request.headers.get("Authorization", "")
+    return hmac.compare_digest(provided, f"Bearer {token}")
 
 
 async def handle_board(request: web.Request) -> web.Response:
