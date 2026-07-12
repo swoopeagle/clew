@@ -36,7 +36,18 @@ or "Ian's machine is authoritative" is **obsolete**. Current truth:
   between video takes.
 - **Deploys now:** `git push` then `npx @railway/cli up -d` from repo root
   (CLI currently authed on Jay's machine; `railway logs` for prod logs).
-- Tests: **40 green.**
+- **Sunday-evening wow bundle (all live — SHOW THESE IN THE VIDEO):**
+  1. **Proactive morning briefing** — DM Clew `clew briefing` → instant pipeline
+     briefing (⏰ deadlines ≤7d with war-room links, 🔍 awaiting review, 📮 awaiting
+     funder, 📄 reports due) AND that DM becomes the daily 9am PT home (background
+     loop in the Railway process). This is the "agent that works while you sleep"
+     beat — fire it on demand for the camera.
+  2. **War-room channel topics** — every grant channel shows `📅 Due … · 💰 … ·
+     brief pinned` in its topic, refreshed when the deadline is set.
+  3. **Canvas application drafts** — "Help me apply" now writes the outline into
+     the war room's channel canvas (living doc, team-editable) when OAuth's user
+     token is available; falls back to a chat message otherwise.
+- Tests: **44 green.**
 
 ## 0. TL;DR
 
