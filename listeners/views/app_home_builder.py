@@ -1,11 +1,13 @@
 from listeners.views.board_builder import build_board_blocks
 
-_PIPELINE_SEGMENTS = [
-    ("qualified", "{n} to review"),
-    ("approved", "{n} approved"),
-    ("applied", "{n} in progress"),
-    ("submitted", "{n} awaiting decision"),
-    ("awarded", ":trophy: {n} awarded"),
+# The pipeline funnel shown at the top of the board — stage, emoji, short label.
+# Rendered left-to-right with counts so you see the whole flow at a glance.
+_FUNNEL = [
+    ("qualified", ":mag:", "to review"),
+    ("approved", ":white_check_mark:", "approved"),
+    ("applied", ":writing_hand:", "applied"),
+    ("submitted", ":mailbox_with_mail:", "submitted"),
+    ("awarded", ":trophy:", "awarded"),
 ]
 
 _ONBOARDING_STEPS = (
@@ -73,15 +75,16 @@ def _profile_summary_block(org_profile: dict) -> dict:
     return block
 
 
-def _pipeline_summary(board: dict[str, list[dict]]) -> str | None:
-    segments = []
-    for stage, template in _PIPELINE_SEGMENTS:
-        n = len(board.get(stage, []))
-        if n:
-            segments.append(template.format(n=n))
-    if not segments:
+def _pipeline_funnel(board: dict[str, list[dict]]) -> str | None:
+    """A left-to-right funnel of the whole pipeline with counts, e.g.
+    :mag: *2* to review → :white_check_mark: *3* approved → …"""
+    if not any(board.get(stage) for stage, *_ in _FUNNEL):
         return None
-    return ":bar_chart: *Pipeline:*  " + "  ·  ".join(segments)
+    stages = [
+        f"{emoji} *{len(board.get(stage, []))}* {label}"
+        for stage, emoji, label in _FUNNEL
+    ]
+    return "  →  ".join(stages)
 
 
 def _visibility_block(visible: dict) -> dict:
@@ -211,11 +214,9 @@ def build_app_home_view(
 
     blocks.append({"type": "divider"})
 
-    pipeline = _pipeline_summary(board)
-    if pipeline:
-        blocks.append(
-            {"type": "context", "elements": [{"type": "mrkdwn", "text": pipeline}]}
-        )
+    funnel = _pipeline_funnel(board)
+    if funnel:
+        blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": funnel}})
 
     if is_connected:
         blocks.append(

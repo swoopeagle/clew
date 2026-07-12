@@ -6,7 +6,7 @@ from slack_bolt.context.async_context import AsyncBoltContext
 from slack_sdk.web.async_client import AsyncWebClient
 
 from listeners.actions.origin import resolve_origin
-from listeners.views.app_home_builder import _pipeline_summary
+from listeners.views.app_home_builder import _pipeline_funnel
 from listeners.views.board_builder import build_board_blocks
 from listeners.views.home_refresh import _get_workspace_url
 from storage import get_prospects_grouped_by_stage
@@ -26,13 +26,10 @@ async def handle_show_saved(
         grouped = await asyncio.to_thread(get_prospects_grouped_by_stage, team_id)
 
         blocks = []
-        pipeline = _pipeline_summary(grouped)
-        if pipeline:
+        funnel = _pipeline_funnel(grouped)
+        if funnel:
             blocks.append(
-                {
-                    "type": "context",
-                    "elements": [{"type": "mrkdwn", "text": pipeline}],
-                }
+                {"type": "section", "text": {"type": "mrkdwn", "text": funnel}}
             )
         blocks.extend(
             build_board_blocks(grouped, workspace_url=await _get_workspace_url(client))

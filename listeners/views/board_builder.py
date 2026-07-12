@@ -66,7 +66,10 @@ def build_board_blocks(
         blocks.append(
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"*{STAGE_LABELS[stage]}*"},
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*{STAGE_LABELS[stage]}*  `{len(rows)}`",
+                },
             }
         )
 
