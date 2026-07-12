@@ -71,7 +71,37 @@ or "Ian's machine is authoritative" is **obsolete**. Current truth:
      buttons (Find Grants / Saved Grants / Edit Profile / Web Board) stay in
      DMs + general channels. Fixed: app_mention was stripping ALL `<@U…>`
      mentions, which would have eaten task assignees.
-- Tests: **57 green.**
+  5. **Real funder research (the big one — from Jay's Bob Woodruff live test:
+     briefs were "VERIFY everything + a ProPublica link")** — root cause was
+     structural: the agent had no web search (couldn't FIND a funder's site)
+     and fetched pages had their links stripped (couldn't navigate one).
+     Now: the built-in **WebSearch is enabled** for the agent (untrusted-data
+     rule extended to search results; everything else stays disallowed);
+     `fetch_webpage` output lists the page's LINKS incl. mailto contacts so
+     the agent crawls homepage → grants page → application portal; war-room
+     briefs are REQUIRED to run the research loop and now carry `apply_url`
+     (the real portal), `criteria_url`, `contact`, who's-eligible bullets,
+     and an **AI eligibility analysis** cross-referencing the org profile —
+     all rendered prominently in the pinned brief, and the portal URL is
+     persisted so 🌐 Grant Website opens where you actually apply, not
+     ProPublica. 403-blocked sites (Cloudflare TLS fingerprinting — e.g.
+     bobwoodrufffoundation.org) fall back to targeted WebSearch queries;
+     fetch sends browser-like headers. Draft-application uses the same loop.
+  6. **Canvas draft fix (Jay: "I DONT see any channel canvas")** — the canvas
+     existed but Slack hides channel canvases; the success message now
+     deep-links straight to the canvas doc (workspace `/docs/` URL) and names
+     the canvas icon as the manual path. A re-draft REPLACES the existing
+     canvas via `canvases.edit` instead of silently dumping to chat
+     (channels only allow one canvas). War-room topics truncate long
+     free-text grant sizes.
+  7. **Web board premium teal makeover (live on Vercel, same URL)** — brand
+     unified to the teal logo family: animated spiral logo that draws itself
+     in, Fraunces serif wordmark, count-up stat tiles, staggered card
+     entrances, deadline/source pill chips, stage-tinted column headers,
+     shimmer skeleton while loading, pulsing Live indicator, full dark mode,
+     `prefers-reduced-motion` respected, tagline removed. Zero new deps;
+     web/ only (no bot deploy involved).
+- Tests: **62 green.**
 
 ## 0. TL;DR
 
