@@ -17,8 +17,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN pip install --no-cache-dir -e .
 
-RUN mkdir -p /app/data
+# The agent CLI refuses to run as root; entrypoint drops privileges after
+# fixing volume ownership.
+RUN useradd -m -u 1000 clew && mkdir -p /app/data && chown -R clew:clew /app
 
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 HOME=/home/clew
 
-CMD ["python", "app_oauth.py"]
+RUN chmod +x /app/entrypoint.sh
+
+CMD ["/app/entrypoint.sh"]
