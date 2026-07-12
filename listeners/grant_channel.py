@@ -39,7 +39,9 @@ these keys:
 
 Trust rules: never invent amounts, deadlines, or facts. Anything a source does \
 not support goes in "verify", never in "confirmed" or the amount/deadline \
-fields. Keep every bullet to one short line. Output the JSON object only.
+fields. Keep each bullet TELEGRAPHIC — a fragment of ~3-7 words, not a sentence \
+(e.g. "Award size range", not "We still need to confirm the award size range"). \
+Output the JSON object only.
 
 PROSPECT:
 {prospect_json}
