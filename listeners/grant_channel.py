@@ -144,5 +144,16 @@ async def create_grant_channel(
                 pass  # pinning is nice-to-have (needs pins:write)
     except Exception as e:
         logger.exception(f"Grant brief failed for {prospect['name']}: {e}")
+        try:
+            await client.chat_update(
+                channel=channel_id,
+                ts=intro["ts"],
+                text=(
+                    f":thread: War room for *{prospect['name']}*. I couldn't finish "
+                    "the brief just now — mention @Clew here and I'll pull it together."
+                ),
+            )
+        except SlackApiError:
+            pass  # never let a brief failure surface as a broken approval
 
     return channel_id

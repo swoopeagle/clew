@@ -8,7 +8,10 @@ from slack_bolt.context.set_status.async_set_status import AsyncSetStatus
 from slack_sdk.web.async_client import AsyncWebClient
 
 from agent import AgentDeps, run_agent
-from agent.channel_context import prepend_grant_channel_context
+from agent.channel_context import (
+    prepend_channel_history,
+    prepend_grant_channel_context,
+)
 from agent.org_context import prepend_org_profile
 from thread_context import session_store
 from listeners.events.tool_status import status_for
@@ -92,6 +95,7 @@ async def handle_message(
 
         prompt_text = await prepend_org_profile(text, team_id)
         prompt_text = await prepend_grant_channel_context(prompt_text, channel_id)
+        prompt_text = await prepend_channel_history(prompt_text, channel_id, client)
         response_text, new_session_id = await run_agent(
             prompt_text,
             session_id=existing_session_id,
