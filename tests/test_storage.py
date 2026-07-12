@@ -145,6 +145,65 @@ def test_prospects_scoped_by_org():
     assert t1_board["qualified"][0]["name"] == "A"
 
 
+def test_insert_prospect_captures_deadline_and_application_url():
+    prospect_id = insert_prospect(
+        org_id="T1",
+        name="Rural Health Grant",
+        source="grants_gov",
+        source_ref="OPP-123",
+        program_area=None,
+        geography=None,
+        grant_size=None,
+        fit_rationale="fits",
+        fit_sources=["https://www.grants.gov/search-results-detail/123"],
+        deadline_date="2026-09-30",
+        application_url="https://www.grants.gov/search-results-detail/123",
+    )
+    prospect = get_prospect(prospect_id)
+    assert prospect["deadline_date"] == "2026-09-30"
+    assert (
+        prospect["application_url"]
+        == "https://www.grants.gov/search-results-detail/123"
+    )
+
+    # Both stay optional — the pre-existing call shape must keep working.
+    bare_id = insert_prospect(
+        org_id="T1",
+        name="No Deadline Fund",
+        source="propublica",
+        source_ref=None,
+        program_area=None,
+        geography=None,
+        grant_size=None,
+        fit_rationale="fits",
+        fit_sources=["https://projects.propublica.org/nonprofits/organizations/9"],
+    )
+    bare = get_prospect(bare_id)
+    assert bare["deadline_date"] is None
+    assert bare["application_url"] is None
+
+
+def test_iso_date_normalizes_grants_gov_format():
+    from agent.tools.qualify import _iso_date
+
+    assert _iso_date("2026-01-31") == "2026-01-31"
+    assert _iso_date("01/31/2026") == "2026-01-31"
+    assert _iso_date("  09/05/2026 ") == "2026-09-05"
+    assert _iso_date("Fall 2026") is None
+    assert _iso_date("") is None
+    assert _iso_date(None) is None
+
+
+def test_brief_deadline_backfill_accepts_only_real_dates():
+    from listeners.grant_channel import _valid_iso_date
+
+    assert _valid_iso_date("2026-08-01") == "2026-08-01"
+    assert _valid_iso_date(" 2026-08-01 ") == "2026-08-01"
+    assert _valid_iso_date(None) is None
+    assert _valid_iso_date("Verify on the funder's site") is None
+    assert _valid_iso_date(20260801) is None
+
+
 def test_reset_org_wipes_profile_and_prospects():
     from storage import (
         get_org_profile,

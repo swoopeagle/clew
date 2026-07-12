@@ -7,6 +7,7 @@ qualified prospect without a citation attached.
 """
 
 import asyncio
+from datetime import date, datetime
 
 from claude_agent_sdk import tool
 
@@ -32,6 +33,24 @@ def _accepted_citations(fit_sources, emitted_urls: set[str]) -> list[str]:
             continue  # well-formed, but no search tool actually returned it
         accepted.append(url)
     return accepted
+
+
+def _iso_date(raw: str | None) -> str | None:
+    """Normalize a deadline to ISO YYYY-MM-DD, or None if it isn't a date.
+    grants.gov emits MM/DD/YYYY; the board/briefing due-soon checks parse
+    with date.fromisoformat, so anything unparseable is dropped rather than
+    stored dirty."""
+    if not raw:
+        return None
+    raw = raw.strip()
+    try:
+        return date.fromisoformat(raw).isoformat()
+    except ValueError:
+        pass
+    try:
+        return datetime.strptime(raw, "%m/%d/%Y").date().isoformat()
+    except ValueError:
+        return None
 
 
 def _rejection(text: str) -> dict:
@@ -89,6 +108,14 @@ def _rejection(text: str) -> dict:
                 "type": "string",
                 "description": "Optional: if workspace search found a prior mention of this funder, summarize it here.",
             },
+            "deadline_date": {
+                "type": "string",
+                "description": "Application deadline as YYYY-MM-DD when the source states one (convert grants.gov close_date, e.g. 01/31/2026 -> 2026-01-31). Omit if unknown — never guess.",
+            },
+            "application_url": {
+                "type": "string",
+                "description": "The URL where the org actually applies or reads the full opportunity (e.g. the grants.gov detail url from the search result). Must be a URL a search tool returned.",
+            },
         },
         "required": ["name", "source", "fit_rationale", "fit_sources"],
     },
@@ -124,6 +151,14 @@ async def save_qualified_prospect_tool(args):
             f"stage: {existing['stage']}). Not adding a duplicate."
         )
 
+    # application_url passes through the same trust gate as citations — a
+    # hallucinated link must never become the card's Apply button.
+    application_url = args.get("application_url")
+    if application_url and not _accepted_citations(
+        [application_url], deps.emitted_urls
+    ):
+        application_url = None
+
     prospect_id = await asyncio.to_thread(
         insert_prospect,
         org_id=deps.team_id,
@@ -136,6 +171,8 @@ async def save_qualified_prospect_tool(args):
         fit_rationale=args["fit_rationale"],
         fit_sources=citations,
         warm_path_note=args.get("warm_path_note"),
+        deadline_date=_iso_date(args.get("deadline_date")),
+        application_url=application_url,
     )
 
     prospect = {

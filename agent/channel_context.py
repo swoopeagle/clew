@@ -22,6 +22,7 @@ _CONTEXT_FIELDS = (
     "fit_sources",
     "stage",
     "deadline_date",
+    "application_url",
     "report_due_date",
 )
 

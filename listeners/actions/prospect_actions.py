@@ -64,18 +64,20 @@ async def handle_approve_prospect(
             )
             return
 
-        # Open the deadline modal (trigger_id expires ~3s after the click). If it
-        # fails, approval must still proceed — the deadline can be set later, but
-        # the war room and stage change should never be lost to a dead trigger.
-        try:
-            await client.views_open(
-                trigger_id=body["trigger_id"],
-                view=build_deadline_modal(prospect_id),
-            )
-        except SlackApiError as e:
-            logger.warning(f"Deadline modal did not open ({e}); approving anyway.")
-
         prospect = await asyncio.to_thread(get_prospect, prospect_id)
+
+        # Ask for the deadline ONLY when Clew couldn't capture it itself (the
+        # search tools save grants.gov close dates at qualify time, and the
+        # war-room brief backfills what research finds). trigger_id expires
+        # ~3s after the click; if the modal fails, approval still proceeds.
+        if not prospect.get("deadline_date"):
+            try:
+                await client.views_open(
+                    trigger_id=body["trigger_id"],
+                    view=build_deadline_modal(prospect_id),
+                )
+            except SlackApiError as e:
+                logger.warning(f"Deadline modal did not open ({e}); approving anyway.")
 
         if prospect.get("slack_channel_id") and prospect.get("slack_message_ts"):
             await client.chat_update(

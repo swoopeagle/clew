@@ -6,6 +6,7 @@ Clew on hand via @mention."""
 import asyncio
 import json
 import re
+from datetime import date
 from logging import Logger
 
 from slack_sdk.errors import SlackApiError
@@ -31,6 +32,7 @@ these keys:
   "fit": "<one sentence: why this fits us>",
   "amount": "<award size or range ONLY if a source supports it; else 'Verify on the funder's site'>",
   "deadline": "<deadline ONLY if a source supports it; else 'Verify on the funder's site'>",
+  "deadline_date": "<the same deadline as machine-readable YYYY-MM-DD, or null if no source states one>",
   "confirmed": ["<short facts you verified from sources — one line each>"],
   "verify": ["<short items to confirm on the funder's site before applying>"],
   "next_steps": ["<2-3 short, concrete next actions>"],
@@ -46,6 +48,16 @@ Output the JSON object only.
 PROSPECT:
 {prospect_json}
 """
+
+
+def _valid_iso_date(raw) -> str | None:
+    """Accept only a real YYYY-MM-DD string (the brief may emit null or prose)."""
+    if not isinstance(raw, str):
+        return None
+    try:
+        return date.fromisoformat(raw.strip()).isoformat()
+    except ValueError:
+        return None
 
 
 def channel_topic_for(prospect: dict) -> str:
@@ -147,6 +159,7 @@ async def create_grant_channel(
                 "fit_rationale",
                 "fit_sources",
                 "deadline_date",
+                "application_url",
             )
         },
         default=str,
@@ -176,6 +189,22 @@ async def create_grant_channel(
         if brief:
             data = parse_brief_json(brief)
             if data:
+                # Backfill: the brief researches the funder, so if it found a
+                # dated deadline the human never has to type one. The topic
+                # and Home board pick it up immediately.
+                found = _valid_iso_date(data.get("deadline_date"))
+                if found and not prospect.get("deadline_date"):
+                    await asyncio.to_thread(
+                        update_prospect, prospect["id"], deadline_date=found
+                    )
+                    prospect["deadline_date"] = found
+                    await set_grant_channel_topic(client, channel_id, prospect)
+                    try:
+                        from listeners.views.home_refresh import publish_home
+
+                        await publish_home(client, user_id, team_id, user_token)
+                    except Exception:
+                        pass  # board refresh is nice-to-have here
                 posted = await client.chat_postMessage(
                     channel=channel_id,
                     text=f"Grant brief: {data.get('funder', prospect['name'])}",

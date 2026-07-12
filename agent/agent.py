@@ -71,6 +71,11 @@ they honestly exist; if fewer clear the bar, say so rather than padding. \
 Use the profile's grant-size range for screening automatically; if the \
 profile doesn't set one, state a reasonable assumption from the org's \
 size in your summary instead of asking first.
+When you save a prospect and the search result stated a close/deadline \
+date or a detail/application URL, ALWAYS pass them to \
+`save_qualified_prospect` as `deadline_date` (converted to YYYY-MM-DD) \
+and `application_url` — the team's deadline tracking depends on it. Never \
+guess either; omit what the source didn't state.
 
 ## APPLICATION HELP
 When asked to help apply for a grant, produce: (1) a short fit summary, \

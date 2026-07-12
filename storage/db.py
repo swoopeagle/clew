@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS prospects (
     warm_path_note TEXT,
     stage TEXT NOT NULL DEFAULT 'qualified',
     deadline_date TEXT,
+    application_url TEXT,
     report_due_date TEXT,
     reported_at TEXT,
     retro_note TEXT,
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS prospects (
 _MIGRATIONS = [
     "ALTER TABLE prospects ADD COLUMN grant_channel_id TEXT",
     "ALTER TABLE org_profile ADD COLUMN briefing_channel_id TEXT",
+    "ALTER TABLE prospects ADD COLUMN application_url TEXT",
 ]
 
 
@@ -171,6 +173,8 @@ def insert_prospect(
     fit_rationale: str,
     fit_sources: list[str],
     warm_path_note: str | None = None,
+    deadline_date: str | None = None,
+    application_url: str | None = None,
 ) -> int:
     conn = _connect()
     try:
@@ -179,8 +183,9 @@ def insert_prospect(
             """
             INSERT INTO prospects
                 (org_id, name, source, source_ref, program_area, geography, grant_size,
-                 fit_rationale, fit_sources, warm_path_note, stage, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'qualified', ?, ?)
+                 fit_rationale, fit_sources, warm_path_note, deadline_date,
+                 application_url, stage, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'qualified', ?, ?)
             """,
             (
                 org_id,
@@ -193,6 +198,8 @@ def insert_prospect(
                 fit_rationale,
                 json.dumps(fit_sources),
                 warm_path_note,
+                deadline_date,
+                application_url,
                 now,
                 now,
             ),
