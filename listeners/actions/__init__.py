@@ -21,6 +21,7 @@ from .prospect_actions import (
     handle_mark_submitted,
     handle_pass_prospect,
     handle_refresh_home,
+    handle_set_deadline,
 )
 
 
@@ -42,6 +43,8 @@ def register(app: AsyncApp):
         await ack()
 
     app.action("clew_open_web_board")(_ack_only)
+    app.action("clew_open_grant_link")(_ack_only)
+    app.action("clew_set_deadline")(handle_set_deadline)
     app.action("clew_find_grants")(handle_find_grants)
     app.action("clew_approve_prospect")(handle_approve_prospect)
     app.action("clew_pass_prospect")(handle_pass_prospect)

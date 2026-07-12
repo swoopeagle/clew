@@ -120,6 +120,27 @@ async def handle_approve_prospect(
         logger.exception(f"Failed to approve prospect: {e}")
 
 
+async def handle_set_deadline(
+    ack: Ack,
+    body: dict,
+    client: AsyncWebClient,
+    context: AsyncBoltContext,
+    logger: Logger,
+):
+    """War-room 📅 Set Deadline button: opens the same deadline modal the
+    Approve flow uses; its submission already saves, refreshes the channel
+    topic, and republishes Home."""
+    await ack()
+    try:
+        prospect_id = int(body["actions"][0]["value"])
+        await client.views_open(
+            trigger_id=body["trigger_id"],
+            view=build_deadline_modal(prospect_id),
+        )
+    except Exception as e:
+        logger.exception(f"Failed to open deadline modal: {e}")
+
+
 async def handle_pass_prospect(
     ack: Ack,
     body: dict,

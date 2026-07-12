@@ -156,3 +156,59 @@ def test_board_rows_link_war_room_channel():
     )
     texts = [b["text"]["text"] for b in blocks if b["type"] == "section"]
     assert any("Beta Fund" in t and "<#C123>" in t for t in texts)
+
+
+def test_grant_nav_blocks_are_grant_scoped():
+    from listeners.views.setup_prompt_builder import build_grant_nav_blocks
+
+    prospect = {
+        "id": 7,
+        "name": "Acme Fund",
+        "application_url": "https://www.grants.gov/search-results-detail/7",
+        "fit_sources": '["https://example.org/source"]',
+        "deadline_date": None,
+    }
+    blocks = build_grant_nav_blocks(prospect)
+    elements = blocks[0]["elements"]
+    by_action = {e["action_id"]: e for e in elements}
+
+    # Grant-scoped buttons only — no org-wide actions in a war room.
+    assert "clew_find_grants" not in by_action
+    assert "clew_show_saved" not in by_action
+    assert "clew_open_org_profile" not in by_action
+
+    assert by_action["clew_draft_application"]["value"] == "7"
+    assert by_action["clew_designate_tasks"]["value"] == "7"
+    assert by_action["clew_show_tasks"]["value"] == "7"
+    # application_url wins over fit_sources for the website button.
+    assert (
+        by_action["clew_open_grant_link"]["url"]
+        == "https://www.grants.gov/search-results-detail/7"
+    )
+    # No deadline yet -> Set Deadline offered.
+    assert by_action["clew_set_deadline"]["value"] == "7"
+
+
+def test_grant_nav_blocks_url_fallback_and_deadline_conditional():
+    from listeners.views.setup_prompt_builder import build_grant_nav_blocks
+
+    prospect = {
+        "id": 8,
+        "name": "Beta Fund",
+        "application_url": None,
+        "fit_sources": '["https://example.org/fallback"]',
+        "deadline_date": "2026-09-01",
+    }
+    by_action = {
+        e["action_id"]: e for e in build_grant_nav_blocks(prospect)[0]["elements"]
+    }
+    assert by_action["clew_open_grant_link"]["url"] == "https://example.org/fallback"
+    assert "clew_set_deadline" not in by_action
+
+    # No URL anywhere and no deadline: website button omitted, deadline shown.
+    bare = {"id": 9, "name": "C", "application_url": None, "fit_sources": None}
+    by_action = {
+        e["action_id"]: e for e in build_grant_nav_blocks(bare)[0]["elements"]
+    }
+    assert "clew_open_grant_link" not in by_action
+    assert "clew_set_deadline" in by_action

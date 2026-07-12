@@ -23,9 +23,10 @@ from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
 from listeners.views.setup_prompt_builder import (
     build_chat_nav_blocks,
+    build_grant_nav_blocks,
     build_profile_setup_blocks,
 )
-from storage import get_org_profile, set_briefing_channel
+from storage import get_org_profile, get_prospect_by_grant_channel, set_briefing_channel
 
 
 async def handle_message(
@@ -127,12 +128,16 @@ async def handle_message(
             on_tool_use=_tool_status,
         )
 
-        # Stream response in thread with feedback buttons; when no org
-        # profile exists yet, add a one-click setup button under the reply.
+        # Stream response with trailing buttons scoped to the surface: a war
+        # room gets THIS grant's actions, elsewhere the org-wide nav (or the
+        # setup nudge when no profile exists yet).
         streamer = await say_stream()
         await streamer.append(markdown_text=response_text)
         trailing_blocks = list(build_feedback_blocks())
-        if await asyncio.to_thread(get_org_profile, team_id):
+        war_room = await asyncio.to_thread(get_prospect_by_grant_channel, channel_id)
+        if war_room:
+            trailing_blocks = build_grant_nav_blocks(war_room) + trailing_blocks
+        elif await asyncio.to_thread(get_org_profile, team_id):
             trailing_blocks = build_chat_nav_blocks(team_id) + trailing_blocks
         else:
             trailing_blocks = build_profile_setup_blocks() + trailing_blocks

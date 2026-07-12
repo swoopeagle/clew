@@ -223,6 +223,27 @@ async def create_grant_channel(
                 await client.pins_add(channel=channel_id, timestamp=posted["ts"])
             except SlackApiError:
                 pass  # pinning is nice-to-have (needs pins:write)
+
+            # Grant-scoped quick actions right under the brief, so the room
+            # is workable the moment it opens.
+            try:
+                from listeners.views.setup_prompt_builder import (
+                    build_grant_nav_blocks,
+                )
+
+                await client.chat_postMessage(
+                    channel=channel_id,
+                    text="Quick actions for this grant",
+                    blocks=[
+                        {
+                            "type": "section",
+                            "text": {"type": "mrkdwn", "text": "*Quick actions:*"},
+                        },
+                        *build_grant_nav_blocks(prospect),
+                    ],
+                )
+            except SlackApiError:
+                pass  # the nav also rides under every @Clew reply here
     except Exception as e:
         logger.exception(f"Grant brief failed for {prospect['name']}: {e}")
         try:
