@@ -66,6 +66,9 @@ walkthrough-grounded video script, and 5 reference GIFs**.
 - **Full Find Grants sweep takes ~2–3 min** (6 program areas × 3 sources + warm-path
   + 990 checks); the war-room **brief takes ~1–2 min**. The video script speed-ramps
   both — do NOT show them real-time.
+- **Demo reset:** DM Clew `reset clew` → confirmation card → wipes the org profile +
+  all prospects and ARCHIVES the war-room channels (bots can't hard-delete channels).
+  Perfect for re-running the onboarding demo from scratch.
 
 ## 3. What changed tonight (all committed + pushed to `main`)
 

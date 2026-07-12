@@ -295,3 +295,24 @@ def get_prospects_grouped_by_stage(org_id: str) -> dict[str, list[dict]]:
         return grouped
     finally:
         conn.close()
+
+
+def reset_org(org_id: str) -> dict:
+    """Wipe an org for demo re-testing: delete its profile and every
+    prospect. Returns what was removed so the caller can archive the
+    war-room channels."""
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT grant_channel_id FROM prospects "
+            "WHERE org_id = ? AND grant_channel_id IS NOT NULL",
+            (org_id,),
+        ).fetchall()
+        channel_ids = [row["grant_channel_id"] for row in rows]
+        cur = conn.execute("DELETE FROM prospects WHERE org_id = ?", (org_id,))
+        prospect_count = cur.rowcount
+        conn.execute("DELETE FROM org_profile WHERE org_id = ?", (org_id,))
+        conn.commit()
+        return {"grant_channel_ids": channel_ids, "prospect_count": prospect_count}
+    finally:
+        conn.close()

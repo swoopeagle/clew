@@ -143,3 +143,43 @@ def test_prospects_scoped_by_org():
     t1_board = get_prospects_grouped_by_stage("T1")
     assert len(t1_board["qualified"]) == 1
     assert t1_board["qualified"][0]["name"] == "A"
+
+
+def test_reset_org_wipes_profile_and_prospects():
+    from storage import (
+        get_org_profile,
+        get_prospects_grouped_by_stage,
+        insert_prospect,
+        reset_org,
+        update_prospect,
+        upsert_org_profile,
+    )
+
+    upsert_org_profile(
+        org_id="Treset",
+        mission="m",
+        geography="g",
+        program_areas="a",
+        grant_size_min=None,
+        grant_size_max=None,
+        exclusions=None,
+    )
+    pid = insert_prospect(
+        org_id="Treset",
+        name="Wipe Me Fund",
+        source="grants_gov",
+        source_ref=None,
+        program_area=None,
+        geography=None,
+        grant_size=None,
+        fit_rationale="r",
+        fit_sources=["https://www.grants.gov/x"],
+    )
+    update_prospect(pid, grant_channel_id="C_WARROOM")
+
+    result = reset_org("Treset")
+    assert result["prospect_count"] == 1
+    assert result["grant_channel_ids"] == ["C_WARROOM"]
+    assert get_org_profile("Treset") is None
+    grouped = get_prospects_grouped_by_stage("Treset")
+    assert all(not rows for rows in grouped.values())

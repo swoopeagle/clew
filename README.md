@@ -189,6 +189,12 @@ Open the app in Slack:
   living Canvases.
 - **Deadline chasing:** scheduled war-room reminders as a deadline nears.
 
+### Resetting the demo
+
+DM Clew `reset clew` and confirm — this clears the org profile, wipes every
+prospect, and archives the `#grant-…` war-room channels so you can run the whole
+onboarding flow again from scratch.
+
 ## Development
 
 ```sh

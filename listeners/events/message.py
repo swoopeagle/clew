@@ -14,6 +14,10 @@ from agent.channel_context import (
 )
 from agent.org_context import prepend_org_profile
 from thread_context import session_store
+from listeners.actions.reset_action import (
+    build_reset_confirmation_blocks,
+    is_reset_request,
+)
 from listeners.events.tool_status import status_for
 from listeners.views.feedback_builder import build_feedback_blocks
 from listeners.views.setup_prompt_builder import (
@@ -58,6 +62,17 @@ async def handle_message(
         channel_id = context.channel_id
         text = event.get("text", "")
         thread_ts = event.get("thread_ts") or event["ts"]
+
+        # Demo-testing escape hatch: "reset clew" in a DM wipes the org
+        # (after a confirmation click) — never reaches the agent.
+        if is_dm and is_reset_request(text):
+            team_id = context.team_id or "default"
+            await say(
+                text="Reset Clew for this workspace?",
+                blocks=await build_reset_confirmation_blocks(team_id),
+                thread_ts=thread_ts,
+            )
+            return
 
         # Get session ID for conversation context
         existing_session_id = session_store.get_session(channel_id, thread_ts)

@@ -4,6 +4,7 @@ from .draft_application_action import handle_draft_application
 from .feedback_buttons import handle_feedback_button
 from .find_grants_action import handle_find_grants
 from .org_profile_actions import handle_ai_draft_profile, handle_open_org_profile
+from .reset_action import handle_cancel_reset, handle_confirm_reset
 from .saved_grants_action import handle_show_saved
 from .prospect_actions import (
     handle_approve_prospect,
@@ -22,6 +23,8 @@ def register(app: AsyncApp):
     app.action("clew_open_org_profile")(handle_open_org_profile)
     app.action("clew_ai_draft_profile")(handle_ai_draft_profile)
     app.action("clew_show_saved")(handle_show_saved)
+    app.action("clew_confirm_reset")(handle_confirm_reset)
+    app.action("clew_cancel_reset")(handle_cancel_reset)
     app.action("clew_draft_application")(handle_draft_application)
 
     # URL buttons still emit an action that must be acked.

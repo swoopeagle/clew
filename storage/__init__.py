@@ -8,6 +8,7 @@ from .db import (
     init_db,
     insert_prospect,
     list_org_ids,
+    reset_org,
     update_prospect,
     upsert_org_profile,
 )
@@ -24,4 +25,5 @@ __all__ = [
     "update_prospect",
     "get_prospects_grouped_by_stage",
     "list_org_ids",
+    "reset_org",
 ]
