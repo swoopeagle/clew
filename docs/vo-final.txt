@@ -1,0 +1,40 @@
+CLEW DEMO NARRATION (read at a calm pace, about 2:50)
+
+Millions of teams run their day inside Slack, and that includes nonprofits.
+There are over one and a half million nonprofits in the United States alone,
+and most of them are tiny. A couple of people wearing every hat, doing the
+work of entire departments. They live and die by grant funding, but finding
+grants is slow, confusing, and the tools that help cost hundreds of dollars a
+month. So the search for money becomes the first thing that falls off the
+desk, at exactly the organizations that can least afford it.
+
+We built Clew to fix that. Clew is a Slack agent that works like a full grant
+office. It searches federal opportunities, foundation tax records, and real
+award data, and surfaces extremely high quality grants that are hyper
+tailored to your organization. And it has one rule: it can never recommend a
+funder it can't prove exists. Every prospect comes with a real citation, and
+that rule is enforced in code, not in a prompt.
+
+Here's what that looks like for Paws for Purple Hearts, a nonprofit that
+trains service dogs for wounded veterans. Setup is one message. Paste your
+website, and Clew drafts your entire profile. Ask it to find grants, and it
+sweeps every source and returns a cited shortlist matched to your mission,
+your geography, and your capacity. Click a citation, and you're looking at a
+live government record.
+
+Approve a grant, and Clew opens a war room. The deadline sits in the channel
+topic, and the brief already holds the application portal, the criteria, a
+contact, and an honest answer on whether you're even eligible. Click Draft
+Application, and it writes a competitive draft into a shared canvas, marking
+exactly what's ready to use and exactly what it needs from you. It proposes
+the action items, you hand each one to a teammate with a click, and every
+morning it briefs the team and nudges whatever's falling behind.
+
+And here's the bigger vision. Thousands of nonprofits already run on
+Salesforce Nonprofit Cloud, but the real collaboration happens in chat. Clew
+is the actionable bridge, the place where funding data becomes actual work,
+and continuity between Slack and Salesforce is our next step.
+
+Nonprofits do the most with the least. With Clew, Slack becomes the teammate
+they could never afford to hire. Let's make the world a better place with
+Slack agents.
