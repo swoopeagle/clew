@@ -1,9 +1,99 @@
 # CONTEXT.md — Clew: current state & the road to submission
 
-_Last updated: **Sunday July 12, 2026, LATE NIGHT** — tip commit `bf2e07e`; agent
-sessions now persist across deploys; **Ian: your Monday checklist, bug-triage
-results, and Railway token runbook are all in §5.** Read §0a then §5 FIRST —
-§0 and §3 are Fri/Sat history and several details there are superseded._
+_Last updated: **Sunday July 12, 2026, VERY LATE** — tip commit `29d70b8`. A long
+Sun-night session sharpened Draft Application into a competitive-draft engine,
+fixed 4 issues, and ran a full feature sweep (**all green, 76 pytest green**) —
+**all code-complete on `main` but PENDING a Railway + Vercel redeploy.** It was
+tested independently of the redeploy and works well. **Jay: read §00 (Monday
+handoff) FIRST**, then §0a. §0/§3/§5 are earlier history; several details there
+are superseded._
+
+---
+
+## 00. 🌅 MONDAY MORNING — Jay, start HERE (Sun-night session handoff)
+
+_Ian + Claude ran a long Sunday-night (July 12) session. Everything below is
+**code-complete on `main` (tip `29d70b8`) and unit-tested (76 pytest green)** but
+**NOT yet deployed** — Railway is still the old build. It was all **tested
+independently of the redeploy and works well**; the redeploy is what makes it
+live. Do the deploy → verify → reseed below and we're demo-ready._
+
+### A. Deploy + check-on (do FIRST)
+1. **Deploy `main` (tip `29d70b8`) to BOTH hosts:**
+   - **Railway** (Slack bot + API): `git pull` → `npx @railway/cli up -d` from repo root.
+   - **Vercel** (web board): the `web/app/page.tsx` change (deadline countdown) needs a
+     Vercel deploy too — otherwise Slack and the board disagree by a day.
+2. **Confirm the deployed SHA** — closes the long-open **B0.1** gate (the exact live sha was
+   never proven; runtime logs are heartbeats only).
+3. **Post-deploy verifications (~20 min):**
+   - **R1 session persistence** — the deploy IS the test: draft a profile conversationally,
+     let the deploy land, reply "save it" → must save (no "I don't have a drafted profile visible").
+   - **Draft Application (the big one)** — click it in a war room: should now produce a
+     COMPETITIVE draft (real apply link → ⭐ why-fund-us → 📋 proof-points-we-need → ready-to-use
+     prose tagged ✅ USE-AS-IS / ✏️ NEEDS → outcomes table → boilerplate → checklist), land in the
+     channel canvas, and **re-clicking must refresh the SAME canvas (no duplicate)**.
+   - **cfemail guard** — a funder-contact query must never surface a literal "[email protected]".
+   - **Deadline countdown** — the Slack briefing "N days" must now MATCH the web board "Nd left"
+     (both anchored to America/Los_Angeles).
+4. **Reseed before recording** — `reset clew` + re-onboard PPH. Clears stale TEL HI channels,
+   `#grant-metta-fund`, numbered-duplicate war rooms, AND the Sun-night test debris (a
+   `#grant-dav-charitable-service-trust` war room, Bob Woodruff mistakenly in "Applied", a stray
+   BWF canvas + re-posted task board).
+
+### B. What changed this session (all on `main`, pending deploy)
+- **Draft Application → competitive-draft engine.** Rewrote the APPLICATION HELP doctrine
+  (`agent/agent.py` SYSTEM_PROMPT) + slimmed `DRAFT_APPLICATION_PROMPT`: research the funder's
+  real past grantees, then deliver apply-link → why-fund-us → proof-points-we-need →
+  ready-to-submit prose (✅/✏️ tagged) → outcomes framework → boilerplate → checklist. Never
+  invents funder facts, grantees, or the org's own numbers.
+- **4 fixes** (each committed + unit-tested):
+  - **Duplicate canvas on re-draft** → persist `prospects.canvas_id`, edit in place
+    (`draft_application_action.py`, `storage/db.py`; `tests/test_draft_application.py`).
+  - **`[email protected]` leaking into drafts** → prompt guard (the WebSearch-snippet fallback path,
+    which bypasses the decoder).
+  - **Chat-style sign-off** in canvas drafts → removed via prompt.
+  - **Deadline countdown mismatch** Slack vs board → both anchored to America/Los_Angeles
+    (`briefing.py`, `web/app/page.tsx`; `tests/test_briefing.py`).
+
+### C. Test results (all green — tested independently of the redeploy)
+Full log: `tests/browser-test-2026-07-12.md`.
+- **Phase B re-confirms (live on the current Railway build):** R2 approve-clarify ✅, R4 cfemail
+  fetch-path ✅, B3 tasks ✅, B4 assign/complete ✅, B5 9am-nudge logic ✅, B7 briefing ✅, B8
+  capabilities ✅, B10 impact panel ✅, B11 web board ✅.
+- **Phase C feature sweep — 14/14 ✅:** ping, Saved Grants, Grant Website (opens the real funder
+  portal), Refresh, Edit-Profile modal, award-history table, feedback buttons, Tasks button; plus
+  fresh funder research (honest non-fit), a full Find-Grants sweep (honest null — no fabrication),
+  live R3 (Home auto-updates on save), B2 (Set-Deadline modal only when the deadline is absent +
+  apply-URL capture), fresh Designate-Tasks, B4 live assign+complete with Home/web-board
+  reactivity, and Mark-Applied stage transition + web sync.
+- **No new product bugs surfaced in the entire sweep — the feature set is solid.**
+
+### D. Demo strategy (let's finalize this together)
+- Design + rationale: `docs/draft-application-reuse-engine.md` (the reuse-engine north-star: Clew
+  as compounding org memory — reuse facts, regenerate narrative per funder). Two cuts in
+  `docs/video-script.md`: the current shippable TEL-HI cut, and a new north-star "reuse engine" cut.
+- **The lived-in demo is the winning move.** Come to the recording with PPH already "used for
+  months" — a seeded fact library + a readiness score — then do ONE live fact-capture and the
+  **second-funder reuse shot** (same facts reworded to a different funder, provenance chips) + the
+  **gap-spotting save**. Show the after-state, not the climb. (Seed can be built at shoot time.)
+- **Credibility asset built this session:** the competitive draft was run on FOUR real orgs — Paws
+  for Purple Hearts, Homeboy Industries, Rocking the Boat, First Descents — real funders, real
+  facts, zero per-org tuning. Answers "did you cherry-pick one org?".
+
+### E. Pitch framing — two points to lead with (Ian's calls)
+1. **The judges have little/no social-sector experience.** Don't assume they know grant-seeking
+   pain — **frame the human problem upfront** in plain terms before any product. Calibrate the whole
+   narrative for a general-tech audience.
+2. **The data→action chasm in nonprofits is the core wedge.** Funding intelligence is scattered
+   across silos — Grants.gov, foundation 990s, USAspending, plus the org's own institutional memory
+   — and overstretched staff must manually stitch them together. **Clew collapses that chasm:** it
+   unifies the silos and turns scattered data into an approved, actionable shortlist + war rooms +
+   drafts. The story isn't "an AI that writes grant text" — it's **the connective tissue between
+   data and action**.
+
+### F. What's left
+Basically: **deploy (Railway + Vercel) → verify (§A.3) → reseed → finalize the demo cut + record.**
+Everything testable pre-deploy is done and green.
 
 ---
 
