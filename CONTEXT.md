@@ -352,8 +352,10 @@ creds, `ANTHROPIC_API_KEY`, **plus the two web-board values: `CLEW_BOARD_SECRET`
 and `CLEW_API_TOKEN`** — these must be byte-identical to the values in the Vercel
 project env (jays-projects/clew-board), or the 🌐 Web Board button emits unsigned
 links that Vercel 403s ("link isn't valid"). Get them from Jay. **All of these were
-pasted in chat during setup — rotate the Anthropic key + regenerate Slack tokens
-right after submitting.**
+pasted in chat during setup — but do NOT rotate anything until AFTER the Judging
+Period ends (Aug 6; winners ~Aug 11): a rotation kills the live bot, and judges can
+test any time in that window. If an early rotation is truly necessary, do one secret
+at a time, update Railway/Vercel env in the same sitting, and re-verify the bot.**
 
 ## 5. Ian's submission-day checklist (Monday) — REWRITTEN Sunday night, supersedes every earlier version of this section
 
@@ -423,7 +425,9 @@ deploy while the video is being recorded, and never touch the Slack tokens.
 2. **Stage the workspace BEFORE judge invites** — populated board (one Find Grants
    run), one lived-in war room: 🧩 Designate Tasks → assign two via the people picker,
    mark one ✅ done, leave one unassigned (so briefing rollup + nudges have content);
-   `clew briefing` opted in; brief pinned with the apply link visible.
+   `clew briefing` opted in; brief pinned with the apply link visible. **Make sure
+   1–2 approved prospects carry August/September deadlines** — judges test through
+   Aug 6, and a board where every deadline has passed reads as a failing org.
 3. **Devpost** — paste `docs/devpost.md`, upload `assets/devpost-thumbnail.png` (3:2
    card) + `docs/architecture.pdf`, tag technologies (Claude Agent SDK, custom MCP
    server, Real-Time Search API), add the video URL. Sandbox URL:
@@ -434,8 +438,29 @@ deploy while the video is being recorded, and never touch the Slack tokens.
 5. **Judge access** — invite slackhack@salesforce.com + testing@devpost.com as FULL
    members, AFTER #2–4. Clean `#demo` channel with `docs/judge-start-here.md` pinned.
 6. **Submit by ~2 PM** (deadline 5 PM PDT — leave buffer for Devpost hiccups).
-7. **AFTER submission: rotate secrets with Jay** — Anthropic key, Slack tokens/secrets,
-   CLEW_BOARD_SECRET/CLEW_API_TOKEN (several were pasted in chats during the build).
+   Video must already be PUBLIC on YouTube (allow processing time), <3 min with the
+   money shots up front (judges aren't required to watch past 3:00), royalty-free or
+   no music, no third-party trademarks, and no secrets/dashboards visible on screen.
+   **Both Jay AND Ian must be registered on Devpost and on the submission team** —
+   winner verification is per-individual.
+7. **Rotate secrets AFTER THE JUDGING PERIOD (Aug 6+), NOT after submission** — see
+   the warning in §4. Rotating on Monday would kill the bot judges test for 3 weeks.
+
+### Judging-window ops (Jul 14 – Aug 6) — the app must stay alive the whole time
+
+Stage One judging is pass/fail on "capable of running consistently"; judges can test
+ANY day in this window. Therefore:
+- **Keep Railway + Vercel up and both judge accounts in the workspace through Aug 6.**
+  Nothing to babysit — Railway runs itself — just don't turn anything off or rotate
+  tokens.
+- **Hard code-freeze** — emergency keep-it-running fixes only; the judged project
+  must stay substantively what was submitted.
+- **Check Anthropic API billing headroom / spend limits NOW.** Judges clicking Find
+  Grants and Draft Application for three weeks burns real credits; a hit spend limit
+  silently kills the agent mid-judging. (Jay owns the key.)
+- The daily 9am briefing keeps posting all window — that's good (a judge who joined
+  the channel sees the agent alive), just another reason the seeded deadlines must
+  extend past early August.
 
 ## 6. Roadmap (for Devpost "What's next")
 
