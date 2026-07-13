@@ -235,7 +235,7 @@ npx @railway/cli variables              # inspect env (set with --set "K=V")
 #   railway variables --set "CLEW_AGENT_MODEL=claude-opus-4-8" (then redeploy)
 
 # checks (local dev)
-.venv/bin/python -m pytest              # 67 green
+.venv/bin/python -m pytest              # 70 green
 .venv/bin/ruff check . && .venv/bin/ruff format .
 ```
 
