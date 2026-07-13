@@ -91,10 +91,12 @@ one instance only, wait out long ops, screenshot before/after, never retry destr
   the pieces: a war room with an open task + near deadline appears in
   `build_war_room_nudges(team_id)` logic, and confirm the briefing loop is running in the
   Railway logs (needs B0.1). Note as "logic-verified, not observed live."
-- **B6 canvas draft** `[ ]` Click **Draft Application** in a war room. PASS = draft lands in
-  the channel **canvas** (not just a message), the reply links "open the draft", and the
-  draft leads with the real apply link. Then click Draft Application AGAIN. PASS = the SAME
-  canvas refreshes in place — no second canvas, no duplicate.
+- **B6 canvas draft** `[F]` Click **Draft Application** in a war room. Draft lands in the
+  channel **canvas**, reply links "open the draft", leads with the real apply link — all
+  PASS (see Finding B6-A: draft quality is excellent). BUT re-clicking Draft Application
+  **created a SECOND canvas instead of refreshing in place** → FAIL on the refresh criterion.
+  Root-caused + fixed in code (Finding B6-B). Quality: strong; refresh-in-place: was broken,
+  now fixed pending deploy.
 - **B7 morning briefing on demand** `[ ]` DM Clew `clew briefing`. PASS = a pipeline briefing
   posts (funnel, deadlines, tasks) and that DM is opted into the 9am run. Numbers match
   App Home.
@@ -114,4 +116,87 @@ one instance only, wait out long ops, screenshot before/after, never retry destr
 
 ## Findings from Phase B
 _(append here as they surface — same severity scheme: DEMO-BLOCKER / HIGH / POLISH)_
-- _none logged yet_
+
+### Setup confirmed this session (Sun night)
+- Live Railway org is now **PPH** (App Home: "Paws for Purple Hearts provides service and
+  therapy dogs for wounded veterans…", US regional service areas / HQ Canyonville OR,
+  program areas = service-dog training & placement / therapy dogs / canine-assisted
+  services / puppy raising, grant range **$1,000–$500,000**). Pipeline = **3 approved**
+  war rooms: Bob Woodruff Foundation (due 2026-07-20), Patterson Foundation — Assistance
+  Dogs (due 2026-07-18), Petco Love — Helping Heroes. "Real-time workspace search
+  connected" is showing → Finding #7 (warm-path auth) looks resolved. Sole-bot: one reply
+  per action throughout, no duplicates.
+
+### B6-A — Draft Application QUALITY: **STRONG** (this was the top-priority judgment call)
+Tested in `#grant-bob-woodruff-foundation-3`. Read the full canvas from the prior run AND
+drove a fresh Draft Application click; both drafts were high quality and consistent.
+Verdict against the five criteria:
+1. **Real apply link — YES.** Leads with `🔗 Apply here: https://bobwoodrufffoundation.my.site.com/s/`
+   — the funder's actual Salesforce grant portal, with the note they migrated to it in
+   2025. Not a guess. Fresh run independently re-derived the same URL and cited the BWF
+   "Grants for Organizations" page as the source, noting the portal is a JS-loaded form
+   that doesn't render on fetch (so you must create an account directly). Honest and correct.
+2. **Grounding / zero hallucination — YES.** Every claim ties to either BWF's stated
+   priorities (social determinants of health, decreasing barriers to mental healthcare) or
+   PPH's own profile. It HEDGES exactly where it should: *"canine-assisted therapy isn't
+   named as a category on their site — worth confirming with a program officer."* Caught a
+   real **deadline discrepancy**: the auto-captured 2026-07-20 date couldn't be confirmed;
+   three independent sources describe a rolling, year-round process — and it's transparent
+   that the live criteria page 403'd so it used a cached listing. Eligibility checklist is
+   real BWF criteria (501c3, 70% program-spend ratio, 2 yrs of 990s, audited financials,
+   2 consecutive yrs >$50K gross receipts, contact grants@bobwoodrufffoundation.org). No
+   fabricated programs, numbers, or eligibility claims.
+3. **Structure — reads like a real application, not filler.** Apply link + deadline → Fit
+   Summary → Eligibility Checklist → Application Outline (need statement / program
+   description tied to PPH's service-dog + PTSD work / outcomes & evaluation with PCL-5
+   appropriately hedged / budget-narrative bullets) → 3 Reusable Boilerplate paragraphs in
+   PPH's voice. The ask sits inside BWF's $5K–$500K range. Concrete and funder-tailored.
+4. **Canvas + refresh — canvas YES, refresh FAILED.** See B6-B.
+5. **Tone/specificity — funder-tailored, not boilerplate.** Boilerplate paragraphs are
+   specific to PPH (four regional service areas, Canyonville HQ, volunteer puppy-raiser
+   pipeline). Strong.
+Net: the drafts are genuinely good — the kind of output that sells the product. The only
+quality nit is a chat-style sign-off (see B6-C).
+
+### B6-B — HIGH: re-clicking Draft Application creates a DUPLICATE canvas (FIXED in code)
+Evidence: after a second Draft Application click, the war room's tab bar showed **two
+"Untitled" canvas tabs** — the first still holding the earlier draft, the second holding
+the new one (verified by reading both: different apply-link wording, different deadline
+phrasing). Intended behavior (B6 + the code's own comment) is ONE living canvas that a
+re-draft refreshes in place.
+- **Root cause:** `_try_canvas` used create-then-catch — it called
+  `conversations.canvases.create` every time and only edited-in-place if Slack raised
+  `channel_canvas_already_exists`. For canvases created via the API (user token) Slack does
+  NOT reliably treat them as THE channel canvas, so the second `create` **succeeds and
+  spawns a duplicate** instead of raising. The catch-path lookup (`_channel_canvas_id`) is
+  never even reached.
+- **Fix (committed):** persist the canvas id on the prospect and edit it on re-draft, so we
+  don't depend on Slack's dedup. Added `prospects.canvas_id` column + migration
+  (`storage/db.py`); new `_resolve_or_create_canvas` in `draft_application_action.py`:
+  if a stored `canvas_id` exists → `canvases.edit` in place (falls back to create only if
+  the canvas was deleted); otherwise create + persist the id. Kept the
+  `channel_canvas_already_exists` adopt-and-track path as a secondary net. Tests:
+  `tests/test_draft_application.py` (4 cases: redraft edits in place / first draft persists
+  / deleted-canvas fallback / already-exists adopt). **74 pytest green.**
+- **Deploy note:** fix is on local `main`, NOT yet on Railway. Until Jay deploys, a second
+  Draft Application click still duplicates. Verify live after deploy.
+- **Live cleanup:** my test click left a 2nd "Untitled" canvas in
+  `#grant-bob-woodruff-foundation-3`. Same cleanup bucket as Finding #9 — will resolve on a
+  `reset clew` + re-seed for the video, or delete the stray canvas manually. (Did NOT delete
+  it — not confirming destructive actions.)
+
+### B6-C — POLISH: canvas draft ends with a chat-style sign-off (FIXED in code)
+Both drafts closed with *"Let me know if you'd like me to draft this directly into the war
+room canvas, or start filling out the actual portal application questions…"* — confusing,
+because the draft already IS the canvas. The agent didn't know its output gets placed there.
+Fix (committed): `DRAFT_APPLICATION_PROMPT` now tells it the reply is saved verbatim into
+the war-room canvas, to write it AS the finished document, and to end with the requirements
+checklist (no sign-off / follow-up question). Prompt-only, low risk; verify wording live
+after deploy.
+
+### B6-D — POLISH (recommendation, NOT changed): canvas tab title is "Untitled"
+The canvas body H1 is `Application draft — <funder>`, but the canvas's own title (the tab
+label) stays "Untitled" / "Your canvas title" — Slack doesn't promote the markdown H1 to
+the canvas title. Cosmetic, and the API path to set a title is uncertain; deliberately left
+alone the night before judging. Recommend as a post-submission polish (set the canvas title
+when creating, if the API supports it).

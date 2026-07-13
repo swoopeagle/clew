@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS prospects (
     slack_channel_id TEXT,
     slack_message_ts TEXT,
     grant_channel_id TEXT,
+    canvas_id TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -93,6 +94,10 @@ _MIGRATIONS = [
     "ALTER TABLE prospects ADD COLUMN grant_channel_id TEXT",
     "ALTER TABLE org_profile ADD COLUMN briefing_channel_id TEXT",
     "ALTER TABLE prospects ADD COLUMN application_url TEXT",
+    # The war-room canvas Draft Application writes into. Persisted so a
+    # re-draft edits the SAME canvas in place instead of creating a duplicate
+    # (Slack's channel-canvas dedup can't be relied on for API-created canvases).
+    "ALTER TABLE prospects ADD COLUMN canvas_id TEXT",
 ]
 
 

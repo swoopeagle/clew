@@ -13,7 +13,7 @@ from agent.org_context import prepend_org_profile
 from listeners.actions.origin import resolve_origin
 from listeners.events.tool_status import status_for
 from listeners.views.agent_message import build_agent_message_blocks
-from storage import get_prospect
+from storage import get_prospect, update_prospect
 
 DRAFT_APPLICATION_PROMPT = """\
 Help us apply for this approved grant prospect. RESEARCH FIRST — run your \
@@ -30,6 +30,11 @@ outcomes/evaluation, budget narrative bullets), 2-3 reusable boilerplate \
 paragraphs in our voice, and a checklist of the funder's stated requirements \
 — mark an item "VERIFY on the funder's site" only if you fetched and still \
 couldn't confirm it.
+
+Your reply is saved verbatim into this war room's shared canvas for the team \
+to edit — write it AS the finished document. Do not offer to put it in a \
+canvas, do not add a chat-style sign-off, and do not end with a follow-up \
+question; the requirements checklist is the last section.
 
 PROSPECT:
 {prospect_json}
@@ -154,6 +159,64 @@ def _channel_canvas_id(channel: dict) -> str | None:
     return (props.get("canvas") or {}).get("file_id")
 
 
+async def _resolve_or_create_canvas(
+    client: AsyncWebClient,
+    user_client: AsyncWebClient,
+    prospect: dict,
+    canvas_channel: str,
+    document_content: dict,
+) -> str | None:
+    """Return the canvas id to write the draft into, editing in place when we
+    already have one. We track the canvas id on the prospect ourselves rather
+    than trusting Slack's channel-canvas dedup: a canvas created via
+    ``conversations.canvases.create`` doesn't reliably register as THE channel
+    canvas, so a second create silently spawns a DUPLICATE canvas instead of
+    raising ``channel_canvas_already_exists``. Persisting the id and calling
+    ``canvases.edit`` on re-draft keeps every draft in one living doc."""
+    canvas_id = prospect.get("canvas_id")
+    if canvas_id:
+        try:
+            await user_client.canvases_edit(
+                canvas_id=canvas_id,
+                changes=[
+                    {"operation": "replace", "document_content": document_content}
+                ],
+            )
+            return canvas_id
+        except SlackApiError as e:
+            # The stored canvas was deleted out from under us — fall through
+            # and mint a fresh one. Any other error is a real failure.
+            if e.response.get("error") not in (
+                "canvas_not_found",
+                "channel_canvas_not_found",
+            ):
+                raise
+            canvas_id = None
+
+    try:
+        created = await user_client.conversations_canvases_create(
+            channel_id=canvas_channel,
+            document_content=document_content,
+        )
+        canvas_id = created.get("canvas_id")
+    except SlackApiError as e:
+        if e.response.get("error") != "channel_canvas_already_exists":
+            raise
+        info = await client.conversations_info(channel=canvas_channel)
+        canvas_id = _channel_canvas_id(info.get("channel") or {})
+        if not canvas_id:
+            raise
+        await user_client.canvases_edit(
+            canvas_id=canvas_id,
+            changes=[{"operation": "replace", "document_content": document_content}],
+        )
+
+    if canvas_id:
+        # Remember it so the next Draft Application click edits this doc.
+        await asyncio.to_thread(update_prospect, prospect["id"], canvas_id=canvas_id)
+    return canvas_id
+
+
 async def _try_canvas(
     client: AsyncWebClient,
     user_token: str | None,
@@ -164,8 +227,8 @@ async def _try_canvas(
     team_id: str,
 ) -> str | None:
     """Write the application draft into the war room's channel canvas — a
-    living doc the team edits together. A channel has at most ONE canvas, so
-    a re-draft replaces the existing canvas's content instead of failing.
+    living doc the team edits together. Each war room keeps ONE canvas: a
+    re-draft replaces its content in place instead of spawning a duplicate.
     Returns the canvas URL ("" when the workspace URL is unknown) on success,
     or None on any miss so the caller falls back to posting the text in chat.
     Requires the OAuth user token (canvases:write is a user scope)."""
@@ -180,28 +243,9 @@ async def _try_canvas(
             token=user_token,
             base_url=os.environ.get("SLACK_API_URL", "https://slack.com/api/"),
         )
-        try:
-            created = await user_client.conversations_canvases_create(
-                channel_id=canvas_channel,
-                document_content=document_content,
-            )
-            canvas_id = created.get("canvas_id")
-        except SlackApiError as e:
-            if e.response.get("error") != "channel_canvas_already_exists":
-                raise
-            info = await client.conversations_info(channel=canvas_channel)
-            canvas_id = _channel_canvas_id(info.get("channel") or {})
-            if not canvas_id:
-                raise
-            await user_client.canvases_edit(
-                canvas_id=canvas_id,
-                changes=[
-                    {
-                        "operation": "replace",
-                        "document_content": document_content,
-                    }
-                ],
-            )
+        canvas_id = await _resolve_or_create_canvas(
+            client, user_client, prospect, canvas_channel, document_content
+        )
 
         # Deep link straight to the doc — "open the channel canvas" sent
         # people hunting; a clickable link doesn't.
