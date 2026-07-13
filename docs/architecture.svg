@@ -30,20 +30,21 @@
   <text x="76" y="336" font-size="12" fill="#55617E">pipeline funnel · grant board · deadline flags</text>
   <text x="76" y="353" font-size="12" fill="#55617E">🔒 “What Clew can see” transparency panel</text>
 
-  <rect x="60" y="394" width="300" height="110" rx="10" fill="#FAF6F0" stroke="#EB6F54" stroke-width="1.6"/>
+  <rect x="60" y="394" width="300" height="127" rx="10" fill="#FAF6F0" stroke="#EB6F54" stroke-width="1.6"/>
   <text x="76" y="420" font-size="14" font-weight="bold" fill="#22304F">📂 War rooms — #grant-…</text>
   <text x="76" y="440" font-size="12" fill="#55617E">created on Approve · topic: 📅 due · 💰 size</text>
-  <text x="76" y="457" font-size="12" fill="#55617E">pinned cited brief · grant-aware @clew help</text>
-  <text x="76" y="474" font-size="12" fill="#55617E">📄 application draft in the channel canvas</text>
-  <text x="76" y="491" font-size="12" fill="#55617E">(a living doc the team edits together)</text>
+  <text x="76" y="457" font-size="12" fill="#55617E">pinned brief: apply link · criteria · contact ·</text>
+  <text x="76" y="474" font-size="12" fill="#55617E">eligibility analysis · grant-aware @clew help</text>
+  <text x="76" y="491" font-size="12" fill="#55617E">🧩 task board — hand work to teammates</text>
+  <text x="76" y="508" font-size="12" fill="#55617E">📄 competitive draft in the channel canvas</text>
 
-  <rect x="60" y="518" width="300" height="72" rx="10" fill="#FAF6F0" stroke="#C9CFDD"/>
-  <text x="76" y="544" font-size="14" font-weight="bold" fill="#22304F">📋 Modals</text>
-  <text x="76" y="564" font-size="12" fill="#55617E">org profile with ✨ AI form-fill · deadlines</text>
-  <text x="76" y="581" font-size="12" fill="#55617E">award / retro capture</text>
+  <rect x="60" y="535" width="300" height="72" rx="10" fill="#FAF6F0" stroke="#C9CFDD"/>
+  <text x="76" y="561" font-size="14" font-weight="bold" fill="#22304F">📋 Modals</text>
+  <text x="76" y="581" font-size="12" fill="#55617E">org profile with ✨ AI form-fill · deadlines</text>
+  <text x="76" y="598" font-size="12" fill="#55617E">award / retro capture</text>
 
-  <text x="60" y="626" font-size="12" fill="#8B93A7">Approve / Pass buttons are the human gate —</text>
-  <text x="60" y="643" font-size="12" fill="#8B93A7">the agent proposes, people decide.</text>
+  <text x="60" y="643" font-size="12" fill="#8B93A7">Approve / Pass buttons are the human gate —</text>
+  <text x="60" y="660" font-size="12" fill="#8B93A7">the agent proposes, people decide.</text>
 
   <!-- ══════════ RAILWAY ══════════ -->
   <rect x="480" y="80" width="460" height="650" rx="16" fill="#FFFFFF" stroke="#34497A" stroke-width="2"/>
@@ -57,15 +58,15 @@
   <rect x="500" y="218" width="420" height="76" rx="10" fill="#FAF6F0" stroke="#C9CFDD"/>
   <text x="516" y="243" font-size="14" font-weight="bold" fill="#22304F">Claude agent — Claude Agent SDK</text>
   <text x="516" y="263" font-size="12" fill="#55617E">per-thread sessions · org + war-room context injected</text>
-  <text x="516" y="280" font-size="12" fill="#55617E">built-in file/shell/web tools disabled — MCP tools only</text>
+  <text x="516" y="280" font-size="12" fill="#55617E">file/shell built-ins disabled — MCP tools + WebSearch only</text>
 
   <rect x="500" y="308" width="420" height="140" rx="10" fill="#FAF6F0" stroke="#C9CFDD"/>
-  <text x="516" y="333" font-size="14" font-weight="bold" fill="#22304F">Custom MCP server — “clew-grant-tools” (9 tools)</text>
-  <text x="516" y="355" font-size="11.5" fill="#55617E">search_grants_gov · search_propublica_orgs</text>
-  <text x="516" y="372" font-size="11.5" fill="#55617E">get_990_filings · search_usaspending</text>
-  <text x="516" y="389" font-size="11.5" fill="#55617E">get_org_award_history · search_workspace</text>
-  <text x="516" y="406" font-size="11.5" fill="#55617E">fetch_org_website · save_org_profile</text>
-  <text x="516" y="423" font-size="11.5" fill="#55617E">save_qualified_prospect (the gate ↓)</text>
+  <text x="516" y="333" font-size="14" font-weight="bold" fill="#22304F">Custom MCP server — “clew-grant-tools” (11 tools)</text>
+  <text x="516" y="355" font-size="11.5" fill="#55617E">search_grants_gov · search_propublica_orgs · get_990_filings</text>
+  <text x="516" y="372" font-size="11.5" fill="#55617E">search_usaspending · get_org_award_history · search_workspace</text>
+  <text x="516" y="389" font-size="11.5" fill="#55617E">fetch_org_website · fetch_webpage · save_org_profile</text>
+  <text x="516" y="406" font-size="11.5" fill="#55617E">assign_grant_task · save_qualified_prospect (the gate ↓)</text>
+  <text x="516" y="423" font-size="11" fill="#8B93A7">+ built-in WebSearch → crawls funder sites: apply links, contacts</text>
   <text x="516" y="440" font-size="11" fill="#8B93A7">every call: 15 s timeout · graceful “unavailable”</text>
 
   <rect x="500" y="462" width="420" height="82" rx="10" fill="#FDEAE5" stroke="#EB6F54" stroke-width="2"/>
@@ -75,12 +76,13 @@
 
   <rect x="500" y="558" width="420" height="72" rx="10" fill="#FAF6F0" stroke="#C9CFDD"/>
   <text x="516" y="583" font-size="14" font-weight="bold" fill="#22304F">SQLite on persistent volume /app/data</text>
-  <text x="516" y="603" font-size="12" fill="#55617E">org profiles · prospects + full lifecycle · war-room links</text>
-  <text x="516" y="620" font-size="12" fill="#55617E">persisted OAuth install — survives every deploy</text>
+  <text x="516" y="603" font-size="12" fill="#55617E">org profiles · prospects + lifecycle · tasks · canvas links</text>
+  <text x="516" y="620" font-size="12" fill="#55617E">agent sessions + OAuth install — survive every deploy</text>
 
-  <rect x="500" y="644" width="420" height="66" rx="10" fill="#FAF6F0" stroke="#C9CFDD"/>
+  <rect x="500" y="644" width="420" height="80" rx="10" fill="#FAF6F0" stroke="#C9CFDD"/>
   <text x="516" y="669" font-size="14" font-weight="bold" fill="#22304F">🌅 Proactive briefing loop</text>
-  <text x="516" y="689" font-size="12" fill="#55617E">daily 9 a.m. pipeline digest — deadlines, reviews, reports</text>
+  <text x="516" y="689" font-size="12" fill="#55617E">daily 9 a.m. pipeline digest — deadlines, reviews, tasks</text>
+  <text x="516" y="706" font-size="12" fill="#55617E">+ war-room nudges: due ≤3 days / unowned work (@mentions)</text>
 
   <!-- ══════════ DATA SOURCES ══════════ -->
   <rect x="1030" y="80" width="370" height="300" rx="16" fill="#FFFFFF" stroke="#34497A" stroke-width="2"/>
@@ -97,7 +99,8 @@
   <text x="1066" y="298" font-size="13.5" fill="#22304F"><tspan font-weight="bold">USAspending</tspan> — real awards +</text>
   <text x="1066" y="316" font-size="13" fill="#22304F">any org’s own funding history</text>
 
-  <text x="1050" y="360" font-size="12.5" fill="#55617E">+ the org’s own website (profile autofill)</text>
+  <text x="1050" y="352" font-size="12.5" fill="#55617E">+ the org’s own website (profile autofill) + any funder’s</text>
+  <text x="1050" y="369" font-size="12.5" fill="#55617E">site, crawled for real apply links, criteria &amp; contacts</text>
 
   <!-- ══════════ REAL-TIME SEARCH ══════════ -->
   <rect x="1030" y="416" width="370" height="96" rx="16" fill="#FFFFFF" stroke="#34497A" stroke-width="2"/>
@@ -110,8 +113,9 @@
   <text x="1050" y="580" font-size="16" font-weight="bold" fill="#22304F">Vercel — Next.js web board</text>
   <text x="1050" y="602" font-size="12.5" fill="#55617E">live kanban mirror of the same pipeline for board</text>
   <text x="1050" y="619" font-size="12.5" fill="#55617E">members without Slack · polls every 15 s</text>
-  <text x="1050" y="644" font-size="12.5" fill="#B0341B" font-weight="bold">access: signed per-org HMAC links only,</text>
-  <text x="1050" y="661" font-size="12.5" fill="#B0341B" font-weight="bold">handed out inside that org’s Slack</text>
+  <text x="1050" y="641" font-size="12.5" fill="#55617E">task-progress chips · countdowns in sync with Slack</text>
+  <text x="1050" y="663" font-size="12.5" fill="#B0341B" font-weight="bold">access: signed per-org HMAC links only,</text>
+  <text x="1050" y="680" font-size="12.5" fill="#B0341B" font-weight="bold">handed out inside that org’s Slack</text>
 
   <!-- ══════════ ARROWS ══════════ -->
   <!-- Slack <-> Railway -->
@@ -140,5 +144,5 @@
   <!-- Footer -->
   <text x="40" y="790" font-size="13" fill="#55617E">The agent proposes → a human approves → a war room + brief materialize → the same SQLite state renders everywhere:</text>
   <text x="40" y="810" font-size="13" fill="#55617E">shortlist cards, App Home board, morning briefing, and the web board are all views over one table.</text>
-  <text x="40" y="846" font-size="12" fill="#8B93A7">Stack: Slack Bolt (Python, async) · Claude Agent SDK (Sonnet 5 / Opus 4.8) · custom MCP server · SQLite · Docker on Railway · Next.js 16 on Vercel · 44 tests</text>
+  <text x="40" y="846" font-size="12" fill="#8B93A7">Stack: Slack Bolt (Python, async) · Claude Agent SDK (Sonnet 5 / Opus 4.8) · custom MCP server · SQLite · Docker on Railway · Next.js 16 on Vercel · 76 tests</text>
 </svg>
