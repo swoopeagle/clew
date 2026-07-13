@@ -62,35 +62,44 @@ one instance only, wait out long ops, screenshot before/after, never retry destr
   Russian-word artifact recurring).
 
 ## Regression re-confirm of the 4 code-fixed findings (needs B0.1 green)
-- **R1 session persistence** `[ ]` Draft an org profile conversationally in a DM, get the
-  "say save it" prompt, **have Jay redeploy** (or wait for one), then reply "save it".
-  PASS = it saves; no "I don't have a drafted profile visible."
-- **R2 approve clarify** `[ ]` DM just "approve" with no prospect context. PASS = asks
-  which prospect; does NOT replay an unrelated topic.
-- **R3 home refresh** `[ ]` Run Find Grants; WITHOUT clicking Refresh, open App Home.
-  PASS = board shows the new prospects.
-- **R4 cfemail** `[ ]` Ask Clew for a funder's contact email on a Cloudflare-protected
-  page. PASS = a real decoded address, never literal `[email protected]`.
+- **R1 session persistence** `[B]` DEFERRED — needs a real deploy event to test
+  save-across-redeploy. Do it as part of tomorrow's Jay deploy.
+- **R2 approve clarify** `[P]` DM'd bare "approve" (10:38 PM). Reply: *"I want to make sure
+  I approve the right one — could you tell me which prospect… (check the shortlist on the
+  Home tab or ask me to re-list)."* Asks which, doesn't guess, doesn't replay an unrelated
+  topic. Finding #2 confirmed fixed + live.
+- **R3 home refresh** `[P]` (evidenced) The Finding #3 fix (`save_qualified_prospect_tool`
+  → `publish_home` after every save) is in the deployed build, and the Home board is
+  populated with the auto-published prospects. Fresh live observation (run Find Grants →
+  watch Home update without Refresh) folds into the shoot-day reseed.
+- **R4 cfemail** `[P]` (evidenced) The deployed #grant-bob-woodruff brief rendered the
+  correctly-decoded `grants@bobwoodrufffoundation.org` — the fetch-path decode works live.
+  The only leak path is the WebSearch-snippet fallback (seen in the local harness), now
+  covered by the new prompt guard (committed `69791e1`, pending deploy). See Finding R4-A.
 
 ## New features
-- **B1 funder-research engine** `[ ]` Ask Clew to research a specific funder (e.g. "research
-  the Bob Woodruff Foundation for us"). PASS = it web-searches + follows links, returns an
-  eligibility-grade brief, and every factual claim carries a source link on an allowed host
-  (grants.gov / propublica.org / usaspending.gov / the funder's own site). FAIL = any
-  uncited claim or fabricated program.
-- **B2 auto deadline + apply URL** `[ ]` Approve a prospect whose funder page states a
-  deadline + apply link. PASS = Clew captures both automatically and only pops the Set
-  Deadline modal when it can't find one. Verify the captured apply URL actually resolves
-  to the application page.
-- **B3 task designation** `[ ]` In a war room, click **Designate Tasks**. PASS = Clew turns
-  the application requirements into a posted task board (discrete, ownable items grounded in
-  that grant, not generic filler).
-- **B4 assign + complete tasks** `[ ]` Assign a task to a user and mark another done. PASS =
-  board updates in place; App Home "tasks in flight" strip + counts reflect the change.
-- **B5 war-room 9am nudges** `[ ]` Time-gated (fires 09:00 PT). Can't wait — instead verify
-  the pieces: a war room with an open task + near deadline appears in
-  `build_war_room_nudges(team_id)` logic, and confirm the briefing loop is running in the
-  Railway logs (needs B0.1). Note as "logic-verified, not observed live."
+- **B1 funder-research engine** `[P]` (evidenced) Every live brief this session (BWF,
+  Patterson, Petco) was an eligibility-grade brief with real cited sources (propublica,
+  funder's own criteria/portal pages, ProPublica card) and honest Confirmed/Verify splits —
+  no uncited claims or fabricated programs observed. Fresh on-demand run folds into reseed.
+- **B2 auto deadline + apply URL** `[P]` (evidenced) The 3 existing approved prospects show
+  auto-captured deadlines + apply URLs (BWF 2026-07-20 + Salesforce portal; Patterson
+  2026-07-18) while **Petco correctly carries no deadline** (its page states none) — exactly
+  the "capture when stated, skip when absent" behavior. NOT freshly observed: the Set
+  Deadline modal only-pops-when-absent path (needs a fresh approve → do at reseed).
+- **B3 task designation** `[P]` The #grant-bob-woodruff task board is grounded, discrete,
+  ownable items tied to BWF's real requirements (501c3 letter, 990s, audited financials,
+  board list, canine-services fit, need statement), assigned to real users — plus the "No
+  tasks yet — click Designate Tasks" empty state. Not generic filler.
+- **B4 assign + complete tasks** `[P]` (evidenced) Tasks carry real assignees (@Ian, @Jay)
+  and Done states (5 done / 1 open), and the Home strip "1 task in flight" reconciles exactly
+  with the board's "1 open" — counts reflect task state across surfaces. Live reactive toggle
+  not exercised (avoided mutating Jay's task).
+- **B5 war-room 9am nudges** `[P]` (logic-verified) `build_war_room_nudges` nudges
+  approved/applied war rooms with a deadline ≤3 days OR unassigned open tasks;
+  `_seconds_until_next_briefing` fires 09:00 PT and rolls forward; `briefing_loop` starts at
+  app startup and never dies. The same `post_briefing` path is proven live via the on-demand
+  `clew briefing` (B7). Not observed firing at 9am (time-gated), as expected.
 - **B6 canvas draft** `[F]` Click **Draft Application** in a war room. Draft lands in the
   channel **canvas**, reply links "open the draft", leads with the real apply link — all
   PASS (see Finding B6-A: draft quality is excellent). BUT re-clicking Draft Application
@@ -108,13 +117,16 @@ one instance only, wait out long ops, screenshot before/after, never retry destr
   Application→canvas, Designate tasks, Saved Grants/Home/Web Board) and both backticked
   phrases `clew briefing` + `reset clew`; references the live PPH profile; no hallucinated
   features. Matches SYSTEM_PROMPT "WHAT YOU CAN DO" exactly.
-- **B9 reset clew (card only — do NOT confirm unless re-seeding)** `[ ]` DM `reset clew`.
-  PASS = confirmation card states the right counts ("wipes profile + N prospects, archives
-  M war-room channels"). **Dismiss it** — only confirm if we're deliberately wiping to
-  re-seed PPH for the video.
-- **B10 App Home impact panel** `[ ]` PASS = the "what Clew has done" block's numbers
-  (prospects researched, citations, war rooms, tasks, ~hours) match the actual pipeline;
-  hours is a labeled estimate, not asserted fact.
+- **B9 reset clew (card only — do NOT confirm unless re-seeding)** `[B]` DELIBERATELY
+  SKIPPED. Typing the `reset clew` trigger was auto-blocked by the safety classifier —
+  consistent with the ground rule to never risk a reset before the video. Card-copy check
+  isn't worth any wipe risk; trivially confirmable at the shoot-day reseed.
+- **B10 App Home impact panel** `[P]` "What Clew has done for you": *researched 3 prospects,
+  verified 3 citations, opened 3 war rooms, handed off 24 tasks — roughly **~8 hours** (est.
+  2.5 hrs per researched prospect)*. Numbers reconcile with the pipeline (3/3/3); **hours is
+  explicitly a labeled estimate**, not asserted fact. PASS. (Aside: the "What Clew can see"
+  panel still lists stale TEL HI channels + a `#grant-metta-fund` → Finding #9 reseed
+  cleanup.)
 - **B11 teal web board** `[P]` Opened from App Home (`clew-board.vercel.app/?org=…&sig=…`,
   per-org HMAC). PASS — teal board loads ("Live · updated …"), KPI tiles correct (**3 Active ·
   3 Approved · 0 Awaiting · 0 Awarded**), stage columns Qualified 0 / Approved 3 / Applied 0 /
@@ -206,6 +218,29 @@ Fix (committed): `DRAFT_APPLICATION_PROMPT` now tells it the reply is saved verb
 the war-room canvas, to write it AS the finished document, and to end with the requirements
 checklist (no sign-off / follow-up question). Prompt-only, low risk; verify wording live
 after deploy.
+
+### R4-A — HIGH: `[email protected]` placeholder can leak into drafts (FIXED in code)
+Finding #4 (cfemail) recurred in the local SDK harness draft — a literal `[email protected]`
+landed in the application ("Portal/technical contact — [email protected]"). Root cause is
+NOT the decoder (`_decode_cfemail` is correct and works on the live fetch path — the live
+BWF brief correctly shows `grants@bobwoodrufffoundation.org`). It's that when a funder's
+contact page **403s the fetch**, the agent falls back to **WebSearch snippets**, which carry
+Cloudflare's visible `[email protected]` placeholder and never pass through the decoder — and
+the agent copies it verbatim. Fix (committed `69791e1`): a FUNDER RESEARCH LOOP rule — never
+output the literal `[email protected]`; if that's all you have, drop the email or say "see the
+funder's contact page." Covers every path (search snippets + failed fetches). Pending deploy.
+
+### Session 2 — Sun night deploy-free pass (summary)
+Everything testable without a deploy, done tonight. **Code shipped to `main`** (all pending
+tomorrow's Jay deploy): B6 duplicate-canvas fix + `canvas_id` persistence (`c5eb672`),
+competitive-draft template in the prompts (`e972248`), cfemail guard (`69791e1`), plus the
+reuse-engine one-pager and the north-star demo cut. **Live re-confirms (on the current
+Railway build):** R2 ✅, R4 ✅ (fetch-path), B3 ✅, B4 ✅, B5 ✅ (logic), B10 ✅; B1/B2/R3
+✅ (evidenced by existing live state). **Deferred to the deploy + reseed:** R1 (needs a
+deploy event), the fresh Find-Grants-dependent observations (live R3, B2 modal path), B9
+(reset — intentionally not risked), and the live test of the new template + canvas fix.
+**Cleanup for reseed:** stale TEL HI `#grant-…` channels + `#grant-metta-fund` + the stray
+2nd BWF "Untitled" canvas (Finding #9 bucket).
 
 ### B7-A — POLISH: deadline countdown disagrees across surfaces (NOT changed)
 Same deadlines, different "days left" between surfaces: for BWF (2026-07-20) the **Slack
