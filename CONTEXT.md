@@ -1,7 +1,9 @@
 # CONTEXT.md — Clew: current state & the road to submission
 
-_Last updated: **Sunday July 12, 2026, afternoon** (Jay + Claude — cloud cutover).
-Read §0a FIRST — it changes several things stated lower in this doc._
+_Last updated: **Sunday July 12, 2026, LATE NIGHT** — tip commit `bf2e07e`; agent
+sessions now persist across deploys; **Ian: your Monday checklist, bug-triage
+results, and Railway token runbook are all in §5.** Read §0a then §5 FIRST —
+§0 and §3 are Fri/Sat history and several details there are superseded._
 
 ---
 
@@ -117,7 +119,13 @@ or "Ian's machine is authoritative" is **obsolete**. Current truth:
      full capability list including the two magic DM phrases (`clew briefing`,
      `reset clew`), which are intercepted before the agent and were previously
      unknown to it.
-- Tests: **67 green.**
+  10. **Session persistence (Ian's Blocker — Sunday night)** — agent sessions now
+      survive deploys: `agent_sessions` table on the volume + the agent CLI's
+      state dir moved to the volume (`CLAUDE_CONFIG_DIR`) + stale-session
+      retry-as-fresh. Plus: App Home republishes after every prospect save,
+      Cloudflare `data-cfemail` decodes to real contact emails, ambiguous
+      prospect references get a clarifying question. Full triage in §5.
+- Tests: **70 green.**
 
 ## 0. TL;DR
 
@@ -133,7 +141,7 @@ room; (2) removed the unused **Slack-MCP server** (was arbitrary "act as the use
 injection surface); (3) Find Grants no longer leaves "Searching…" frozen on error; (4)
 board bearer check is now **timing-safe**; (5) the citation gate now enforces **provenance**
 (a URL a tool actually returned), not just the host — so the trust-boundary pitch is now
-literally true. **Tests: 39 green** (was 33).
+literally true. **Tests: 39 green** (was 33; **now 70** after Sunday's work — §0a).
 
 **First session (earlier July 11):** fixed a wrong-app bug, stood up **OAuth + Real-Time
 Search live**, shipped the enforced-citation trust boundary, redesigned the war-room brief,
@@ -144,9 +152,9 @@ walkthrough-grounded video script, and 5 reference GIFs**.
 ## 1. The competition
 
 - **Slack Agent Builder Challenge — "Agent for Good"**, $8k first / $4k second.
-- **Deadline: Monday July 13, 2026, 5:00 PM PDT.** (July 13 is a *Monday* — the prior
-  handoff mislabeled it Sunday.) Today is Sat July 11, so there are **two full days
-  left** (Sun + Mon). Aim to submit by ~2 PM Monday, not at the wire.
+- **Deadline: Monday July 13, 2026, 5:00 PM PDT — that is TOMORROW.** (It is now
+  late Sunday night 7/12; code is frozen and everything is live on Railway.) Aim
+  to submit by ~2 PM Monday, not at the wire.
 - Judging (25% each): Technological Implementation, Design, Potential Impact, Quality of the Idea.
 - Submission needs: text (draft ready → `docs/devpost.md`), architecture diagram
   (`docs/architecture.svg`, freshly redrawn), **~3-min demo video** (script ready →
@@ -171,7 +179,7 @@ walkthrough-grounded video script, and 5 reference GIFs**.
   all prospects and ARCHIVES the war-room channels (bots can't hard-delete channels).
   Perfect for re-running the onboarding demo from scratch.
 
-## 3. What changed tonight (all committed + pushed to `main`)
+## 3. What changed SATURDAY night (historical — Sunday's much larger changes live in §0a)
 
 - **App fix:** switched `.env` from the old app to `A0BGUBZF23E` (restores
   `channels:manage`/`pins:write` → war rooms work).
@@ -187,7 +195,8 @@ walkthrough-grounded video script, and 5 reference GIFs**.
   in the team's actual discussion.
 - **New tool `get_org_award_history`:** an org's OWN federal award history from
   USAspending (by recipient) — verified live (Mission Neighborhood Centers → 5 cited
-  awards + recurring-funder insight). 9 MCP tools total now.
+  awards + recurring-funder insight). 9 MCP tools as of Saturday (**now 11 +
+  built-in WebSearch** — fetch_webpage and assign_grant_task landed Sunday, §0a).
 - **Brief redesign:** agent emits JSON → scannable Block Kit (Amount/Deadline
   side-by-side, Confirmed/Verify/Next, telegraphic bullets). Falls back to plain
   text if JSON parse fails.
