@@ -46,8 +46,10 @@ labyrinth. A thread through the maze of funders to the ones that actually fit.
 
 ## Pre-invite checklist (for us, not the pin)
 
-- [ ] Bot is running via `bash scripts/run_clew.sh` (plugged in, awake)
+- [ ] Bot is live on Railway (it always is — do NOT run `run_clew.sh`; check by DMing Clew)
 - [ ] DB re-seeded state: click **Find Grants** once so the pipeline/board isn't empty
+- [ ] One lived-in war room: tasks designated + assigned (one ✅ done, one unassigned),
+      brief pinned, `clew briefing` opted in
 - [ ] Old app `A0BG7GBD4CX` deleted (the live one is `A0BGUBZF23E` — don't touch)
 - [ ] Orphaned `#grant-…` channels from old runs archived
 - [ ] `#demo` channel created, this message posted + pinned

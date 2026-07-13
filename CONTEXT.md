@@ -113,6 +113,10 @@ or "Ian's machine is authoritative" is **obsolete**. Current truth:
      task chips per card (board API now ships per-prospect task counts).
      **VIDEO NOTE: fire `clew briefing` on camera — briefing lands in the DM
      AND nudges pop into war rooms simultaneously. Best cold open we have.**
+  9. **Discoverable commands** — ask @clew "what can you do" and it recites the
+     full capability list including the two magic DM phrases (`clew briefing`,
+     `reset clew`), which are intercepted before the agent and were previously
+     unknown to it.
 - Tests: **67 green.**
 
 ## 0. TL;DR
@@ -222,7 +226,7 @@ npx @railway/cli variables              # inspect env (set with --set "K=V")
 #   railway variables --set "CLEW_AGENT_MODEL=claude-opus-4-8" (then redeploy)
 
 # checks (local dev)
-.venv/bin/python -m pytest              # 39 green
+.venv/bin/python -m pytest              # 67 green
 .venv/bin/ruff check . && .venv/bin/ruff format .
 ```
 
@@ -234,53 +238,52 @@ links that Vercel 403s ("link isn't valid"). Get them from Jay. **All of these w
 pasted in chat during setup — rotate the Anthropic key + regenerate Slack tokens
 right after submitting.**
 
-## 5. Ian's action items (Sunday) + the Jay dependency
+## 5. Ian's submission-day checklist (Monday) — REWRITTEN Sunday night, supersedes every earlier version of this section
 
-### Does Ian's list block Jay? — mostly NO. One coupling.
+### Hosting: NOTHING TO DO. Seriously.
 
-Jay owns the **web board / Vercel**. For Jay to do anything with the live board he needs:
-(a) the bot running on Ian's machine, (b) a public tunnel to **`:3001`** (the board API),
-and (c) that tunnel URL set as `CLEW_API_URL` on Vercel. Right now **only the `:3000`
-OAuth tunnel is up — there is no `:3001` tunnel** — so the live board can't reach Ian's
-machine, and Jay is blocked until Ian provides a `:3001` URL.
+The bot runs **24/7 on Railway** (Jay's account, project `clew`) and has been verified
+live all weekend. The web board is permanently wired to it — **no tunnels exist
+anymore, anywhere**. Explicitly:
 
-- **If Jay might touch the board Sunday → do this TONIGHT so you don't block him:**
-  ```sh
-  cloudflared tunnel --url http://localhost:3001   # separate tab from the :3000 one
-  ```
-  Grab the printed `https://<random>.trycloudflare.com` URL and send it to Jay (he sets
-  it as `CLEW_API_URL` on Vercel). While app_oauth.py is running, `:3001` already serves
-  `GET /api/board`, so the tunnel is all that's missing.
-- **Everything else Ian does is independent of Jay** — video, Devpost, judge invites,
-  deleting the old app, secret rotation. None of it touches Jay's work.
+- ❌ Do **NOT** run `scripts/run_clew.sh` — a second connected instance splits Socket
+  Mode events with production (and your old xapp token is dead anyway; auth will fail).
+- ❌ Do **NOT** regenerate any Slack token "to fix" that auth failure — a regen kills
+  the Railway host mid-judging.
+- ❌ Do **NOT** touch Railway, Vercel, or cloudflared. There is nothing to keep alive,
+  no laptop that must stay awake, no URL that rotates.
 
-### Tomorrow (Sunday), priority order — all Ian unless noted
+### Does Ian need Railway access? NO.
 
-1. **Record the ~3-min video** — _Ian (+ video guy)._ THE long pole. Script +
-   5 reference GIFs ready. First run `bash scripts/run_clew.sh`, click **Find Grants**
-   once (~2–3 min) to repopulate the reseeded demo pipeline, and confirm `.env` has
-   `CLEW_AGENT_MODEL` unset or `=claude-opus-4-8` (code already defaults to Opus).
-2. **Devpost** — _Ian._ Create project, paste `docs/devpost.md` section-by-section,
-   upload `docs/architecture.svg`, add "Built with" tags, then the video URL. Save as
-   draft; submit by ~2 PM **Monday**.
-3. **App hygiene** — _Ian, fresh eyes._ Delete OLD app `A0BG7GBD4CX` (**NOT**
-   `A0BGUBZF23E` — verify the ID before clicking); confirm name "Clew" + icon (assets/);
-   archive orphaned `#grant-…` channels from old runs.
-4. **Judge access** — _Ian._ Invite slackhack@salesforce.com + testing@devpost.com as
-   FULL members — AFTER #1–3 (they poke immediately). Create a clean `#demo` channel and
-   pin the copy in `docs/judge-start-here.md`.
-5. **Hosting through Mon 5 PM** — _Ian._ `bash scripts/run_clew.sh` on a plugged-in,
-   awake machine. Add the `:3001` board tunnel (above) if the web board must stay up.
-6. **Web board / Vercel** — _Jay + Ian._ Jay re-points `CLEW_API_URL` whenever the
-   trycloudflare URL rotates, or the board 403s/502s. Unblocked once Ian shares `:3001`.
-7. **Rotate secrets** — _Ian, AFTER submission Monday._ Anthropic key + Slack tokens
-   (pasted in chat during setup).
+Not for the video, Devpost, judge access, or anything on this list. The only scenario
+that needs it: a must-ship code change while Jay is unreachable. In that case only:
+`npx @railway/cli login` (Jay's account, or he adds you as a member), then from repo
+root: `git pull && npx @railway/cli up -d`. Strong recommendation: **code freeze** —
+everything below is logistics, and everything above it is verified live in prod.
 
-### Do-tonight decision
-The only thing worth doing tonight instead of tomorrow is the **`:3001` tunnel URL for
-Jay** — and only if Jay plans to work on the board Sunday. If he's waiting on you either
-way, stand it up now (2 min) and drop him the URL. Otherwise everything can wait for
-tomorrow.
+### Monday, priority order
+
+1. **Record the ~3-min video** — THE long pole. `docs/video-script.md` + GIFs ready.
+   **New best cold open:** DM `clew briefing` on camera — the briefing lands AND
+   nudges pop into the war rooms in the sidebar simultaneously ("It's 9am. Nobody
+   asked Clew for anything."). Get a citation click into the first 45 seconds. For
+   best prose, ask Jay to set `CLEW_AGENT_MODEL=claude-opus-4-8` on Railway first.
+2. **Stage the workspace BEFORE judge invites** — populated board (one Find Grants
+   run), one lived-in war room: 🧩 Designate Tasks → assign two via the people picker,
+   mark one ✅ done, leave one unassigned (so briefing rollup + nudges have content);
+   `clew briefing` opted in; brief pinned with the apply link visible.
+3. **Devpost** — paste `docs/devpost.md`, upload `assets/devpost-thumbnail.png` (3:2
+   card) + `docs/architecture.pdf`, tag technologies (Claude Agent SDK, custom MCP
+   server, Real-Time Search API), add the video URL. Sandbox URL:
+   https://slackathon-hny7616.slack.com. Save as draft early.
+4. **App hygiene** — delete OLD app `A0BG7GBD4CX` (**NOT** `A0BGUBZF23E` — verify the
+   ID before clicking); archive orphaned `#grant-…` channels from old test runs
+   (or DM `reset clew` + re-seed for a pristine pipeline).
+5. **Judge access** — invite slackhack@salesforce.com + testing@devpost.com as FULL
+   members, AFTER #2–4. Clean `#demo` channel with `docs/judge-start-here.md` pinned.
+6. **Submit by ~2 PM** (deadline 5 PM PDT — leave buffer for Devpost hiccups).
+7. **AFTER submission: rotate secrets with Jay** — Anthropic key, Slack tokens/secrets,
+   CLEW_BOARD_SECRET/CLEW_API_TOKEN (several were pasted in chats during the build).
 
 ## 6. Roadmap (for Devpost "What's next")
 
