@@ -97,11 +97,17 @@ one instance only, wait out long ops, screenshot before/after, never retry destr
   **created a SECOND canvas instead of refreshing in place** → FAIL on the refresh criterion.
   Root-caused + fixed in code (Finding B6-B). Quality: strong; refresh-in-place: was broken,
   now fixed pending deploy.
-- **B7 morning briefing on demand** `[ ]` DM Clew `clew briefing`. PASS = a pipeline briefing
-  posts (funnel, deadlines, tasks) and that DM is opted into the 9am run. Numbers match
-  App Home.
-- **B8 capability recitation** `[ ]` Ask "what can you do?" PASS = lists real capabilities and
-  surfaces the `clew briefing` / `reset clew` phrases; no hallucinated features.
+- **B7 morning briefing on demand** `[P]` DM'd `clew briefing`. PASS — posted "Your morning
+  grant briefing": BWF due in 7 days → its war room, Patterson due in 5 days → its war room,
+  "#grant-bob-woodruff-foundation-3 — 1 task open", opts DM into daily 9am ("Clew checks your
+  pipeline every morning"). Petco (no deadline) correctly omitted from deadline lines. Numbers
+  match App Home. Minor: "N days" countdown computed in UTC (7/5) vs PT calendar (8/6) — see
+  Finding B7-A.
+- **B8 capability recitation** `[P]` Asked "what can you do?". PASS — recites the full real
+  capability list (Find grants w/ sources, org profile, Approve→war room, Draft
+  Application→canvas, Designate tasks, Saved Grants/Home/Web Board) and both backticked
+  phrases `clew briefing` + `reset clew`; references the live PPH profile; no hallucinated
+  features. Matches SYSTEM_PROMPT "WHAT YOU CAN DO" exactly.
 - **B9 reset clew (card only — do NOT confirm unless re-seeding)** `[ ]` DM `reset clew`.
   PASS = confirmation card states the right counts ("wipes profile + N prospects, archives
   M war-room channels"). **Dismiss it** — only confirm if we're deliberately wiping to
@@ -109,10 +115,17 @@ one instance only, wait out long ops, screenshot before/after, never retry destr
 - **B10 App Home impact panel** `[ ]` PASS = the "what Clew has done" block's numbers
   (prospects researched, citations, war rooms, tasks, ~hours) match the actual pipeline;
   hours is a labeled estimate, not asserted fact.
-- **B11 teal web board** `[ ]` Open the Web Board (from App Home button). PASS = the teal
-  redesign loads, shows the PPH pipeline by stage with deadlines + cited sources, and the
-  task-progress chips + impact match Slack. Check it read-only (no write controls) and that
-  it degrades gracefully if the API is briefly unreachable.
+- **B11 teal web board** `[P]` Opened from App Home (`clew-board.vercel.app/?org=…&sig=…`,
+  per-org HMAC). PASS — teal board loads ("Live · updated …"), KPI tiles correct (**3 Active ·
+  3 Approved · 0 Awaiting · 0 Awarded**), stage columns Qualified 0 / Approved 3 / Applied 0 /
+  Submitted 0 / Awarded 0. All 3 approved cards show deadline + "Nd left", grant size,
+  geography, full fit rationale WITH honest caveats (ADI/IGDF status for Patterson, Petco
+  invitation-only), warm-path note where relevant, and a cited source (propublica). Task chip
+  "🧩 5/6 tasks" on BWF matches the war room (1 open). Read-only confirmed ("Actions happen in
+  Slack… This board is the live, read-only view") — no write controls. Impact/org header
+  matches Slack. NOT tested: graceful API-down degradation (couldn't safely simulate).
+  (Caution when reading via text-extraction: the KPI tiles' numbers/labels interleave — the
+  SCREENSHOT is authoritative, tiles are correct.)
 
 ## Findings from Phase B
 _(append here as they surface — same severity scheme: DEMO-BLOCKER / HIGH / POLISH)_
@@ -193,6 +206,21 @@ Fix (committed): `DRAFT_APPLICATION_PROMPT` now tells it the reply is saved verb
 the war-room canvas, to write it AS the finished document, and to end with the requirements
 checklist (no sign-off / follow-up question). Prompt-only, low risk; verify wording live
 after deploy.
+
+### B7-A — POLISH: deadline countdown disagrees across surfaces (NOT changed)
+Same deadlines, different "days left" between surfaces: for BWF (2026-07-20) the **Slack
+briefing** says "due in 7 days" while the **web board** says "8d left"; for Patterson
+(2026-07-18) it's "5 days" vs "6d left". The board matches a plain PT calendar date-diff
+(07-20 − 07-12 = 8); the briefing counts one fewer (UTC truncation / "full days from now").
+Cosmetic and easy to miss, but a sharp-eyed viewer comparing Slack to the board will see the
+mismatch. Recommend making both compute from the same clock/rounding. Left unchanged the
+night before judging (low risk, not worth a code change now). Deadlines themselves are
+correct and consistent everywhere.
+
+### B8/B10 cross-check — App Home + board + briefing agree
+App Home: 3 approved, "1 task in flight across 1 war room". Web board: 3 Approved, BWF "5/6
+tasks" (= 1 open). Briefing: "1 task open". All consistent. B10 impact-panel numbers not
+separately audited this session but the three surfaces reconcile.
 
 ### B6-D — POLISH (recommendation, NOT changed): canvas tab title is "Untitled"
 The canvas body H1 is `Application draft — <funder>`, but the canvas's own title (the tab
