@@ -139,6 +139,67 @@ one instance only, wait out long ops, screenshot before/after, never retry destr
   (Caution when reading via text-extraction: the KPI tiles' numbers/labels interleave — the
   SCREENSHOT is authoritative, tiles are correct.)
 
+# Phase C — remaining features (Sun night, live on Railway)
+Sweep of every control/feature not yet freshly exercised. Wave 1 = risk-free; Wave 2 =
+mutates demo state (cleaned by the shoot-day reseed); Wave 3 = deploy-gated (tomorrow).
+
+## Wave 1 — risk-free, ALL PASS
+- **C1 ping** `[P]` "hello" → exactly ONE reply, English, references live PPH profile. Sole-bot
+  confirmed, no duplicates (#5 Russian artifact did not recur).
+- **C2 Saved Grants** `[P]` Posts funnel + all 3 approved cards (BWF/Patterson/Petco) with fit
+  rationale, "Approved" status, "Help me apply" action, source-thread links.
+- **C3 Grant Website** `[P]` Opens `bobwoodrufffoundation.my.site.com/s/` — the REAL BWF grant
+  portal (= the captured application_url, not a guess).
+- **C4 Refresh** `[P]` Board re-publishes cleanly, all numbers unchanged.
+- **C5 Edit Org Profile modal** `[P]` Opens prefilled with live PPH (mission/geography/programs);
+  cancelled without saving.
+- **C6 award-history table** `[P]` Graded the 4:17 PM thread: clean Block Kit table, 3 real DoD
+  awards (HU00011810072 $316,793; HU00012010024 $316,792; HU00012210020 $306,430) each cited to
+  usaspending.gov, recurring-funder insight, honest caveats, no fabrication.
+- **C7 feedback 👍/👎** `[P]` Thumbs-up registers a filled/selected state, no error.
+- **C8 Tasks button** `[P]` Re-posts the current board exactly (1 open + 5 done, right assignees).
+
+## Wave 2 — mutating (on a throwaway test prospect; Jay's 3 stay untouched)
+- **C9 B1 fresh research** `[P]` "research the Gary Sinise Foundation… add if a fit." EXCELLENT:
+  followed real links (official site, First Responder Grant Guidelines PDF, ProPublica 990s),
+  found GSF's only open grant lane is restricted to law-enforcement/fire/EMS depts, correctly
+  concluded PPH doesn't qualify → did NOT save it. Honest non-fit, real citations, no `[email
+  protected]`, recalled the prior conclusion. (Quality-over-quantity discipline, live.)
+- **C10 R3 live / Find Grants** `[P]` Full sweep first returned an HONEST NULL ("No new
+  prospects to save… Nothing padded onto the list just to show something new"), ruling out 8
+  named funders each with a reason — a strong re-validation of the search strategy +
+  no-fabrication guarantee. Then a targeted save (DAV CST, below) drove the R3 observation:
+  on save, App Home auto-updated to "1 to review" + a new "Qualified — awaiting review [1]"
+  row + impact bumped to 4 prospects — all WITHOUT clicking Refresh. `publish_home`-on-save
+  works live.
+- **C11 B2 / approve** `[P]` Approved DAV (whose exact deadline Clew couldn't confirm) → the
+  Set Deadline modal POPPED (the "only when absent" path; BWF/Patterson had captured dates and
+  didn't need it). Set 2026-07-31 → saved → war room `#grant-dav-charitable-service-trust`
+  opened with a full brief: **apply URL captured** (`dav.smartsimple.com`), criteria
+  (`cst.dav.org/grants/`), **real contact `cst@dav.org` (no [email protected])**, honest
+  Amount="Verify", nuanced eligibility analysis, cited DAV sources. Channel topic → "Due
+  2026-07-31".
+- **C12 Designate Tasks (fresh)** `[P]` Grounded, DAV-SPECIFIC board: pull 501c3 letter,
+  financials, board list, "draft need statement citing veteran wounds/rehabilitation",
+  "program narrative on canine-assisted THERAPEUTIC activities" (the eligibility framing),
+  "budget narrative EXCLUDING capital/pilot costs" (DAV's stated exclusions). Not filler; each
+  with an Assign-to picker.
+- **C13 B4 live toggle** `[P]` Assigned task 1 to @Ian (people picker: clew/Jay/Ian/Slackbot)
+  → a green "Done" button appeared → clicked Done → board updated in place (task struck +
+  reordered, counter 6 open/0 done → 5/1). App Home strip → "6 tasks in flight across 2 war
+  rooms · 5 unassigned"; impact → 4 prospects / 30 tasks. Web board task chip → "1/6 tasks".
+  Full cross-surface reactivity.
+- **C14 Mark Applied** `[P]` Clicked Mark Applied → a prospect moved approved→applied (funnel
+  "3 approved · 1 applied"), an "Applied — in progress" section appeared with a "Mark
+  Submitted" button, and the web board reflected it (that prospect left Approved). Stage
+  transition + cross-surface sync work. NOTE: board reflowed between find→click so it applied
+  **Bob Woodruff** instead of DAV — an execution slip, not a product bug; UI is forward-only
+  (Mark Submitted) so not cleanly revertible → reseed fixes it.
+
+**Reseed cleanup added this session:** DAV prospect + `#grant-dav-charitable-service-trust`
+war room (with 1 done/1 assigned task), Bob Woodruff now in "Applied" stage, a stray re-posted
+BWF task board (from C8), the stray 2nd BWF "Untitled" canvas — all cleared by `reset clew`.
+
 ## Findings from Phase B
 _(append here as they surface — same severity scheme: DEMO-BLOCKER / HIGH / POLISH)_
 
