@@ -10,6 +10,18 @@ are superseded._
 
 ---
 
+> **✅ §A DONE (Jay + Claude, Monday morning):** `26b1d20` deployed to BOTH hosts —
+> Railway deployment `0db7d78c` SUCCESS (deployed from a clean checkout of the tip,
+> closing B0.1 by attestation) and Vercel Production Ready (LA-countdown code
+> confirmed in the served JS bundle). Verified live: countdown parity (board
+> "18d/5d left" == briefing's LA-anchored 18/5 for the same deadlines), task chips
+> + real apply URLs rendering, and a full competitive-draft smoke run against the
+> real DAV prospect + PPH profile — all format checks PASS (🔗 real portal, ⭐ Why
+> fund us, 📋 proof points, ✅/✏️ tags, baseline→target outcomes, real cst@dav.org
+> contact, NO "[email protected]", no chat sign-off). Remaining human-only checks:
+> R1 "save it" across a deploy (DM), one in-Slack Draft Application click (canvas
+> edit-in-place is unit-tested), then §A.4 reseed before recording.
+
 ## 00. 🌅 MONDAY MORNING — Jay, start HERE (Sun-night session handoff)
 
 _Ian + Claude ran a long Sunday-night (July 12) session. Everything below is
