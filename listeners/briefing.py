@@ -28,8 +28,13 @@ def is_briefing_request(text: str) -> bool:
 
 
 def _days_until(iso: str | None) -> int | None:
+    # Calendar-day difference measured in America/Los_Angeles so the countdown
+    # matches the web board (which also anchors to LA time). Using date.today()
+    # here would read the SERVER's local date (UTC on Railway), landing a day
+    # off from the board late in the US evening.
     try:
-        return (date.fromisoformat(iso) - date.today()).days
+        today = datetime.now(_BRIEFING_TZ).date()
+        return (date.fromisoformat(iso) - today).days
     except (ValueError, TypeError):
         return None
 

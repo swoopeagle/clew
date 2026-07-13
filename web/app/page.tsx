@@ -130,9 +130,21 @@ function sourceLabel(url: string): string {
 
 function daysUntil(iso?: string | null): number | null {
   if (!iso) return null;
-  const due = new Date(`${iso}T00:00:00`);
-  if (isNaN(due.getTime())) return null;
-  return Math.ceil((due.getTime() - Date.now()) / 86_400_000);
+  // Calendar-day difference in America/Los_Angeles, matching the Slack briefing
+  // (listeners/briefing.py::_days_until). Both anchor to LA time so the "N days"
+  // countdown is identical on the board and in Slack. Parsing both dates as UTC
+  // midnight makes the subtraction a clean whole-day count (no DST/partial-day
+  // drift, no dependence on the viewer's own timezone).
+  const todayLA = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const due = Date.parse(`${iso}T00:00:00Z`);
+  const today = Date.parse(`${todayLA}T00:00:00Z`);
+  if (isNaN(due) || isNaN(today)) return null;
+  return Math.round((due - today) / 86_400_000);
 }
 
 function grantRange(profile: BoardData["org_profile"]): string | null {

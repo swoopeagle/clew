@@ -303,15 +303,17 @@ deploy event), the fresh Find-Grants-dependent observations (live R3, B2 modal p
 **Cleanup for reseed:** stale TEL HI `#grant-…` channels + `#grant-metta-fund` + the stray
 2nd BWF "Untitled" canvas (Finding #9 bucket).
 
-### B7-A — POLISH: deadline countdown disagrees across surfaces (NOT changed)
-Same deadlines, different "days left" between surfaces: for BWF (2026-07-20) the **Slack
-briefing** says "due in 7 days" while the **web board** says "8d left"; for Patterson
-(2026-07-18) it's "5 days" vs "6d left". The board matches a plain PT calendar date-diff
-(07-20 − 07-12 = 8); the briefing counts one fewer (UTC truncation / "full days from now").
-Cosmetic and easy to miss, but a sharp-eyed viewer comparing Slack to the board will see the
-mismatch. Recommend making both compute from the same clock/rounding. Left unchanged the
-night before judging (low risk, not worth a code change now). Deadlines themselves are
-correct and consistent everywhere.
+### B7-A — POLISH: deadline countdown disagreed across surfaces (FIXED in code)
+Same deadlines, different "days left": for BWF (2026-07-20) the **Slack briefing** said "due
+in 7 days" while the **web board** said "8d left"; Patterson "5" vs "6d". Root cause was two
+differences: the briefing (`_days_until`) used `date.today()` = the SERVER's local date (UTC
+on Railway), while the board (`daysUntil`) used `Math.ceil` on an instant-diff in the
+VIEWER's browser TZ. Fix (committed): both now compute a **calendar-day difference anchored
+to America/Los_Angeles** (the TZ the briefing already uses for the 9am run) — briefing via
+`datetime.now(_BRIEFING_TZ).date()`, board via `Intl.DateTimeFormat(timeZone:
+"America/Los_Angeles")` + UTC-midnight subtraction. Verified they now agree: BWF 8, Patterson
+6, DAV 19. Test: `tests/test_briefing.py`. 76 pytest green. (Board change lives in
+`web/app/page.tsx` — needs the Vercel deploy to go live, same as the Railway deploy.)
 
 ### B8/B10 cross-check — App Home + board + briefing agree
 App Home: 3 approved, "1 task in flight across 1 war room". Web board: 3 Approved, BWF "5/6
