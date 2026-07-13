@@ -82,11 +82,13 @@ The literal "340 appears twice" is table-stakes; the **weight-shift + gap-firing
 - Funder research loop (WebSearch + fetch), org profile, and it already fetches the funder's
   **actual application-questions doc** — the unlock for question-as-query.
 
-**Designed but not yet shipped (this session's draft-quality work):**
+**Encoded in the prompts this session (shipped to `main`, pending live test + deploy):**
 - The competitive template: `✅ USE-AS-IS` / `✏️ NEEDS` signposting, a "why fund us"
-  differentiator, a "proof points we need from you" list, an outcomes
-  baseline→target→instrument→timeline framework, and a cost-effectiveness line. Validated by
-  rewrite; not yet encoded into `SYSTEM_PROMPT` / `DRAFT_APPLICATION_PROMPT`.
+  differentiator, a "proof points we need from you" list, ready-to-submit prose (not
+  instructions), an outcomes baseline→target→instrument→timeline framework, and a
+  cost-effectiveness line. Now the authoritative APPLICATION HELP spec in `SYSTEM_PROMPT`,
+  triggered by a slimmed `DRAFT_APPLICATION_PROMPT`. Validated by rewrite + unit test; still
+  needs a production-fidelity run (SDK harness) and a live Slack test after deploy.
 
 **Net-new (the real, defensible asset):**
 - **Fact library**: storage schema — `value, type, provenance(source+who+when), confidence,

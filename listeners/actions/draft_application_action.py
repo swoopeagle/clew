@@ -16,20 +16,21 @@ from listeners.views.agent_message import build_agent_message_blocks
 from storage import get_prospect, update_prospect
 
 DRAFT_APPLICATION_PROMPT = """\
-Help us apply for this approved grant prospect. RESEARCH FIRST — run your \
-FUNDER RESEARCH LOOP: WebSearch the funder if you don't have their site, \
-fetch_webpage the prospect's application_url and/or the funder's own \
-website, and follow the grants/apply links in the fetch output to find the \
-actual application portal, current deadline, and stated requirements — do \
-NOT skip this step. Then produce your \
-APPLICATION HELP deliverable, and START it with "🔗 Apply here:" giving the \
-exact application URL and confirmed deadline (or, if you truly couldn't find \
-the portal after fetching, say which pages you checked). Follow with: fit \
-summary, application outline (need statement, program description, \
-outcomes/evaluation, budget narrative bullets), 2-3 reusable boilerplate \
-paragraphs in our voice, and a checklist of the funder's stated requirements \
-— mark an item "VERIFY on the funder's site" only if you fetched and still \
-couldn't confirm it.
+Help us apply for this approved grant prospect. Produce your full APPLICATION \
+HELP deliverable exactly as your instructions define it — a COMPETITIVE draft, \
+not an outline. RESEARCH FIRST: run your FUNDER RESEARCH LOOP (WebSearch the \
+funder, fetch_webpage the prospect's application_url and the funder's own site, \
+follow the grants/apply links) to find the real portal, current deadline, the \
+funder's published application questions, and WHO THEY ALREADY FUND — do NOT \
+skip this. Then deliver, in order: (1) "🔗 Apply here:" with the exact portal URL \
+and confirmed deadline, (2) "⭐ Why fund us" positioning us against this funder's \
+actual grantees/priorities, (3) "📋 Proof points we need from you" — the exact \
+org numbers you don't have, (4) ready-to-submit sections (need statement, program \
+description, outcomes with baseline → target → instrument → timeline, budget with \
+a cost-effectiveness line) written as ACTUAL prose, not instructions, (5) 2-3 \
+reusable boilerplate paragraphs in our voice, (6) the requirements checklist. Tag \
+every block "✅ USE AS-IS" or "✏️ NEEDS: <exact fact>". Never invent funder \
+facts, grantees, or our own numbers — anything you don't have is a "✏️ NEEDS".
 
 Your reply is saved verbatim into this war room's shared canvas for the team \
 to edit — write it AS the finished document. Do not offer to put it in a \
