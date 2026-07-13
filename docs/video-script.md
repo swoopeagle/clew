@@ -148,3 +148,88 @@ no-fabrication guarantee is enforced in code, not just prompted." (Tech + Idea.)
 5. Browser: logged out of anything personal; bookmarks hidden.
 6. Pre-vet the citation page you'll click (know it loads and looks credible).
 7. Do one silent dry-run of Beats 1–5 so nothing surprises you on camera.
+
+---
+
+# 🔮 Alternate cut — the "reuse engine" demo (north-star)
+
+_This is the demo that sells the actual moat: Clew as **compounding org memory**, not a
+one-shot draft tool. Architecture + rationale live in
+[draft-application-reuse-engine.md](draft-application-reuse-engine.md). It is a **forward
+cut** — it needs the seed below built first; it is NOT recordable today._
+
+## The demo problem this cut solves
+The value is a **derivative** — the rate at which each application gets faster and better —
+but a demo only shows a point on the curve. **You can't show time passing, so show the
+accumulated *result* of time having passed, prove the mechanism live once, and make the
+compounding legible as something on screen that moves.** Show the flywheel already spun up,
+give it one visible push, let the audience feel the momentum.
+
+## Build-first dependencies (be honest — none of this is recordable yet)
+- [ ] **Seeded PPH fact library** — ~25 confirmed facts w/ provenance (the F1–F9 set + more:
+  dogs placed, retention, waitlist, Purdue evidence, ADI/IGDF gap, financials).
+- [ ] **Competitive-draft template deployed to Railway** — now in the prompts
+  (`SYSTEM_PROMPT` APPLICATION HELP), needs deploy + a live test.
+- [ ] **Provenance chips** on canvas facts + a **capture line** ("✓ Saved — will auto-fill N
+  questions across your M active grants").
+- [ ] **Grant-readiness score** on the Home tab (a number that visibly ticks up on capture).
+- [ ] Two war rooms for two funders that reframe the *same* facts differently (Bob Woodruff +
+  Patterson is the proven pair — Patterson's ADI/IGDF rule is the gap-spotting "save").
+
+## The 3:00 spine — beats, VO, stage directions
+
+### 0:00–0:25 — Lived-in cold open (start in the future, not at zero)
+**VO:** "This is Paws for Purple Hearts — a small nonprofit that's been using Clew for a few
+months. Three grants in flight, and a library of everything that makes them fundable —
+dogs placed, retention, the research behind their work — each fact captured once, from
+real work they were already doing."
+**Screen:** PPH **Home tab** — 3 war rooms, a **grant-readiness score** ("78% ready"), a
+fact count. The judge should feel they're looking at an org with history.
+
+### 0:25–1:00 — New grant → competitive draft → ONE live capture
+**VO:** "A new funder lands. Clew researches it live and drafts a *competitive* application —
+not a template. It leads with the real apply link, positions PPH against who this funder
+actually funds, and asks for the few facts it still needs."
+**Stage:** In `#grant-bob-woodruff`, click **Draft Application** → [speed-ramp the research]
+→ the **canvas** draft: 🔗 apply link, ⭐ why-fund-us, `✅ USE AS-IS` prose with **provenance
+chips**, `✏️ NEEDS`. The ED fills **one** live: "92% retention."
+**On-screen copy (the compounding made legible):** *"✓ Saved — this fact will auto-fill 6
+open questions across your 3 active grants."*
+
+### 1:00–2:00 — THE MONEY SHOT: the second funder (reuse) + the save
+**VO:** "Here's what nobody else does. A second funder — completely different questions.
+Watch: you don't re-enter anything."
+**Stage:** Open the second war room (Patterson), click **Draft Application** → the **same
+facts** (340 placements, 92% retention, the Purdue study) **pour into the new draft**,
+reworded to Patterson's actual questions, provenance chips glowing. Point at one fact
+appearing in *both* drafts.
+**VO (the save — the beat that pays off NOW, not later):** "Same facts, different
+application. And Clew just caught that Patterson only funds ADI/IGDF members — flagging it
+*before* the team sank twenty hours into an application they're not even eligible for."
+
+### 2:00–2:30 — Make the compounding legible (the number that moves)
+**VO:** "Every fact entered once now works everywhere. The more PPH uses Clew, the faster
+and stronger every application gets."
+**Screen:** the **readiness score ticks up** (78% → 82%) as the fact lands; "N facts
+powering M applications."
+
+### 2:30–3:00 — Credibility + mission close
+**VO:** "And this isn't tuned for one org."
+**Screen:** the **four-org slide** — Paws for Purple Hearts · Homeboy Industries · Rocking
+the Boat · First Descents — *"Four real nonprofits. Real funders. Real facts. No per-org
+setup."* (This is the answer to "did you cherry-pick one org?")
+**VO close:** "Clew turns the knowledge trapped in one person's head into an asset that
+compounds — so every grant a small nonprofit writes is more competitive than their last.
+Grant seeking is how they survive. Clew helps them win."
+
+## Holy-grail beats for this cut — do not cut these
+1. **The second-funder reuse shot** (1:00–2:00) — same facts, different competitive app. The
+   moment that proves it's not mad-libs.
+2. **The gap-spotting save** — the one benefit that lands *in the room*, not in the future.
+3. **The "will auto-fill 6 questions" capture line** — turns invisible future value into a
+   present, on-screen consequence.
+
+## The trap to avoid
+Do **not** try to show it "getting better" across three live drafts — the deltas are too
+subtle and it's too slow; you'll bore them proving a curve. Show the **after-state + one
+push**, not the climb.
