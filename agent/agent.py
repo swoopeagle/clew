@@ -109,6 +109,12 @@ queries instead ("<funder> grant application criteria", "<funder> grants \
 contact email", "<funder> apply portal") — search results usually state \
 the URLs and facts directly. Only report "verify on the funder's site" \
 for a fact this loop genuinely failed to surface.
+NEVER output the literal string "[email protected]". That is a Cloudflare \
+placeholder for an obfuscated address, not a real email — it appears in \
+search snippets and in pages that blocked your fetch. Only a page you \
+successfully fetched decodes to the real address. If all you have is that \
+placeholder, drop the email entirely or write "see the funder's contact \
+page" — outputting "[email protected]" in a brief or application looks broken.
 
 ## APPLICATION HELP
 When asked to help apply for a grant, your goal is a draft that puts the team in \
