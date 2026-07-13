@@ -9,6 +9,43 @@ Judging (25% each): Technological Implementation, Design, Potential Impact, Qual
 
 ---
 
+## 📊 The problem, in numbers — for the upfront impact case
+
+_Ian's call: the judges likely have **little/no social-sector background**, so we have to
+land WHY THIS MATTERS in the first ~20 seconds with **real numbers, not vibes**. Every figure
+below is real and sourced; round them for the video and re-verify exact wording before
+recording — accuracy is the whole brand._
+
+**The story in three beats — the money is huge, the seekers are tiny & solo, the data is siloed:**
+
+1. **The money is enormous.** US foundations gave **~$100 billion** in 2023, across **~193,700
+   foundations** — many with no website at all (Candid). The federal government distributes
+   **$1 trillion+/yr** in grants; **~100,000 nonprofits** receive **~$303 billion** of it
+   annually (Candid / Urban Institute).
+2. **The orgs that need it most have the least capacity.** **~88%** of US nonprofits operate on
+   **under $500K/yr**; **~59%** under $50K (Candid). And **61%** of grant seekers run the *entire*
+   grant process with just **1–2 people** (GrantStation) — usually no dedicated grant staff.
+3. **The intelligence is scattered across silos.** Federal opportunities live on
+   Grants.gov/SAM.gov; ~193,700 foundations' priorities live in their 990s; historical awards
+   live in USAspending; the org's own funding memory lives in one person's head. Nobody has
+   stitched them together — so a solo ED does it **by hand**.
+
+**The cost of that chasm:** a single grant application runs **30–50 hours** (foundation) to
+**80–200 hours** (federal); for **~40%** of seekers, research + submission + reporting alone eats
+**3+ days per grant** (GrantStation / Instrumentl). For a 1–2 person shop, that's the fundraising
+that funds *everything* — and it's the first thing to fall off.
+
+**One-line thesis for the open:** _the funding exists and the need exists — what's missing is the
+**connective tissue between scattered data and the overstretched people who must act on it.**
+That's Clew._ (Not "an AI that writes grant text" — the connective tissue between **data and action**.)
+
+**Sources to keep on hand (verify before airing):** Candid (foundation count & giving, nonprofit
+budget distribution), Urban Institute (government-grant reliance), GrantStation via
+Instrumentl/Submittable (1–2 person teams; hours per application), Giving USA 2023 (total-giving
+context).
+
+---
+
 ## ⏱️ Read this first — two timing realities that shape the edit
 
 1. **Find Grants takes ~2–3 minutes live** (mandated full sweep: Grants.gov ×

@@ -76,14 +76,20 @@ Full log: `tests/browser-test-2026-07-12.md`.
   months" — a seeded fact library + a readiness score — then do ONE live fact-capture and the
   **second-funder reuse shot** (same facts reworded to a different funder, provenance chips) + the
   **gap-spotting save**. Show the after-state, not the climb. (Seed can be built at shoot time.)
-- **Credibility asset built this session:** the competitive draft was run on FOUR real orgs — Paws
-  for Purple Hearts, Homeboy Industries, Rocking the Boat, First Descents — real funders, real
-  facts, zero per-org tuning. Answers "did you cherry-pick one org?".
+- **Credibility asset built this session:** we validated the **Draft Application flow end-to-end,
+  in-session (in our UI/format, independent of the live platform)** across FOUR real orgs of
+  different domains — Paws for Purple Hearts (veterans/service dogs), Homeboy Industries (gang
+  reentry), Rocking the Boat (Bronx youth), First Descents (young-adult cancer) — each against real
+  funders, with real facts and honest ✏️ gaps, zero per-org tuning. Proves the engine generalizes;
+  answers "did you cherry-pick one org?".
 
 ### E. Pitch framing — two points to lead with (Ian's calls)
 1. **The judges have little/no social-sector experience.** Don't assume they know grant-seeking
    pain — **frame the human problem upfront** in plain terms before any product. Calibrate the whole
-   narrative for a general-tech audience.
+   narrative for a general-tech audience. → Real, cited stats to make that impact case in the first
+   ~20s are compiled in `docs/video-script.md` (§ "The problem, in numbers": ~$100B foundation
+   giving + $303B federal to nonprofits, but ~88% of nonprofits run on <$500K/yr and 61% grant-seek
+   with just 1–2 people, across siloed data sources).
 2. **The data→action chasm in nonprofits is the core wedge.** Funding intelligence is scattered
    across silos — Grants.gov, foundation 990s, USAspending, plus the org's own institutional memory
    — and overstretched staff must manually stitch them together. **Clew collapses that chasm:** it
