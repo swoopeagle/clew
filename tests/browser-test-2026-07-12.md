@@ -50,10 +50,14 @@ web board. Status column: `[ ]` todo · `[~]` in progress · `[P]` pass · `[F]`
 one instance only, wait out long ops, screenshot before/after, never retry destructively._
 
 ## B0 — deploy gate (do FIRST; several B-cases and all fix-regressions depend on it)
-- **B0.1** `[B]` Confirm the running Railway build ≥ `bf2e07e` and a volume is mounted at
-  `/app/data`. **BLOCKED on `RAILWAY_TOKEN`** — once it's in `.env`:
-  `set -a; source .env; set +a; npx @railway/cli variables` (look for the volume +
-  `CLAUDE_CONFIG_DIR=/app/data/claude-home`) and `npx @railway/cli logs` (build sha).
+- **B0.1** `[~]` Confirm the running Railway build ≥ `bf2e07e` and a volume is mounted.
+  Token now in `.env`; ran `npx @railway/cli status` + `variables`:
+  **CONFIRMED** service `clew` is **Online**, volume **`clew-volume` mounted at `/app/data`**
+  (`RAILWAY_VOLUME_MOUNT_PATH=/app/data`), app connected to Slack (healthy ping/pong).
+  **NOT yet confirmed**: exact deployed git sha — runtime logs are heartbeats only. Prove
+  the fix is actually live via **R1** (behavioral) or a one-line confirm from Jay that he
+  deployed `bf2e07e`. NOTE: `railway variables` dumps live Slack secrets in cleartext —
+  don't re-run casually; rotate Slack tokens post-submission (already on the Monday list).
 - **B0.2** `[ ]` Sanity: one ping → exactly one reply, still English (watch for the #5
   Russian-word artifact recurring).
 
