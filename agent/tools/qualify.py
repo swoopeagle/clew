@@ -205,6 +205,16 @@ async def save_qualified_prospect_tool(args):
         slack_message_ts=posted["ts"],
     )
 
+    # Keep the App Home board current — Slack never refreshes it on its own,
+    # so without this a fresh Find Grants run leaves "No prospects yet" on
+    # the dashboard until someone clicks Refresh. Best-effort.
+    try:
+        from listeners.views.home_refresh import publish_home
+
+        await publish_home(deps.client, deps.user_id, deps.team_id, deps.user_token)
+    except Exception:
+        pass
+
     return {
         "content": [
             {

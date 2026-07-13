@@ -242,3 +242,33 @@ def test_reset_org_wipes_profile_and_prospects():
     assert get_org_profile("Treset") is None
     grouped = get_prospects_grouped_by_stage("Treset")
     assert all(not rows for rows in grouped.values())
+
+
+def test_agent_sessions_persist_and_expire():
+    from storage import get_agent_session, set_agent_session
+
+    set_agent_session("D123", "111.222", "sess-abc")
+    assert get_agent_session("D123", "111.222", ttl_seconds=3600) == "sess-abc"
+    assert get_agent_session("D123", "999.000", ttl_seconds=3600) is None
+
+    # Upsert replaces.
+    set_agent_session("D123", "111.222", "sess-def")
+    assert get_agent_session("D123", "111.222", ttl_seconds=3600) == "sess-def"
+
+    # TTL: a zero-second TTL treats everything as expired (and purges).
+    assert get_agent_session("D123", "111.222", ttl_seconds=-1) is None
+    assert get_agent_session("D123", "111.222", ttl_seconds=3600) is None
+
+
+def test_session_store_survives_process_restart():
+    """The bug Ian hit: in-memory sessions were wiped by every deploy. The
+    store is now DB-backed, so a brand-new instance (a 'new process') sees
+    sessions written by the old one."""
+    from thread_context.store import SessionStore
+
+    old_process = SessionStore()
+    old_process.set_session("D42", "123.456", "sess-live")
+
+    new_process = SessionStore()  # fresh cache, same database
+    assert new_process.get_session("D42", "123.456") == "sess-live"
+    assert new_process.get_session("D42", "does-not-exist") is None

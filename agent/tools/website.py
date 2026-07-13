@@ -18,6 +18,19 @@ TIMEOUT = aiohttp.ClientTimeout(total=15)
 _SKIP_TAGS = {"script", "style", "noscript", "svg", "head"}
 
 
+def _decode_cfemail(hexstr: str) -> str | None:
+    """Decode Cloudflare's email obfuscation (data-cfemail): first byte is an
+    XOR key for the rest. Without this, protected pages surface the literal
+    placeholder '[email protected]' instead of the real contact address."""
+    try:
+        data = bytes.fromhex(hexstr)
+        key = data[0]
+        email = bytes(b ^ key for b in data[1:]).decode("utf-8")
+        return email if "@" in email else None
+    except (ValueError, IndexError):
+        return None
+
+
 class _TextExtractor(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -39,8 +52,20 @@ class _TextExtractor(HTMLParser):
             attrs = dict(attrs)
             if attrs.get("name", "").lower() == "description":
                 self.meta_description = attrs.get("content", "")
+        attrs_dict = dict(attrs)
+        cfemail = attrs_dict.get("data-cfemail")
+        if cfemail:
+            decoded = _decode_cfemail(cfemail)
+            if decoded:
+                self.parts.append(decoded)
+                self.links.append((decoded, f"mailto:{decoded}"))
         if tag == "a" and not self._skip_depth:
-            href = dict(attrs).get("href") or ""
+            href = attrs_dict.get("href") or ""
+            if href and not href.startswith(("#", "javascript:")):
+                # Cloudflare replaces the address with /cdn-cgi/l/email-protection;
+                # the decoded mailto (above) is the real link.
+                if "email-protection" in href:
+                    href = ""
             if href and not href.startswith(("#", "javascript:")):
                 self._link_href = href
                 self._link_text = []

@@ -253,13 +253,48 @@ anymore, anywhere**. Explicitly:
 - ❌ Do **NOT** touch Railway, Vercel, or cloudflared. There is nothing to keep alive,
   no laptop that must stay awake, no URL that rotates.
 
-### Does Ian need Railway access? NO.
+### Does Ian need Railway access? Not required — but a project token is set up for you.
 
-Not for the video, Devpost, judge access, or anything on this list. The only scenario
-that needs it: a must-ship code change while Jay is unreachable. In that case only:
-`npx @railway/cli login` (Jay's account, or he adds you as a member), then from repo
-root: `git pull && npx @railway/cli up -d`. Strong recommendation: **code freeze** —
-everything below is logistics, and everything above it is verified live in prod.
+Nothing on the Monday list needs Railway. For debugging/deploying independently, Jay
+is issuing you a **project token** (Railway dashboard → project `clew` → Settings →
+Tokens; scoped to `production`, revocable after the hackathon — no account sharing).
+Use it as an env var with the CLI, no login needed:
+
+```sh
+export RAILWAY_TOKEN=<token from Jay>
+npx @railway/cli logs          # tail prod logs
+npx @railway/cli variables     # inspect env
+npx @railway/cli up -d         # deploy (from repo root, after git pull)
+```
+
+Deploy etiquette: `git pull` first, run `pytest` (70 green) before `up -d`, never
+deploy while the video is being recorded, and never touch the Slack tokens.
+
+### Ian's Sunday-night bug triage — status after fixes (all deployed)
+
+1. **Session amnesia (Blocker) — FIXED, your diagnosis was right.** Two layers: the
+   session map was in-memory (every deploy wiped it — there were ~6 deploys while you
+   tested), and the agent CLI's session transcripts lived on the ephemeral container
+   FS. Now: sessions persist to an `agent_sessions` table on the volume, the CLI's
+   state dir moved to the volume (`CLAUDE_CONFIG_DIR=/app/data/claude-home`), and a
+   stale session id degrades to a fresh conversation instead of an error. The
+   conversational "say save it" flow survives deploys now.
+2. **Bare "approve" misfire — same root cause** (a wiped session losing the thread);
+   also added a prompt rule: ambiguous prospect references get a clarifying question,
+   never a guess.
+3. **App Home stale after Find Grants — FIXED**: the board republishes after every
+   prospect save (Slack never refreshes App Home on its own).
+4. **`[email protected]` — FIXED**: that's Cloudflare's email obfuscation; the fetcher
+   now decodes `data-cfemail` so the real address (usually the grants contact) shows.
+5. **Stray Russian word** — one-off sampling artifact on sonnet-5; no code lever worth
+   touching the night before judging. Recording on Opus makes it even less likely.
+6. **Sig visible in board URL** — by design: the HMAC link IS the auth (documented).
+7. **Warm-path not connected** — expected: needs one visit to
+   https://clew-production.up.railway.app/slack/install (persists to the volume).
+8. **Vague-ask clarifying question** — deliberately NOT changed: the full-sweep-
+   without-asking behavior was an explicit fix after earlier feedback; reverting it
+   the night before judging risks the "agent asks permission" regression.
+9. **Duplicate `-3` channels** — yours to archive (or `reset clew` + re-seed).
 
 ### Monday, priority order
 

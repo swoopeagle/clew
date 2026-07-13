@@ -78,6 +78,14 @@ CREATE TABLE IF NOT EXISTS grant_tasks (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS agent_sessions (
+    channel_id TEXT NOT NULL,
+    thread_ts TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    updated_at REAL NOT NULL,
+    PRIMARY KEY (channel_id, thread_ts)
+);
 """
 
 # Columns added after the first release; applied to pre-existing DBs.
@@ -455,6 +463,54 @@ def list_briefing_targets() -> list[dict]:
             "WHERE briefing_channel_id IS NOT NULL"
         ).fetchall()
         return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def get_agent_session(
+    channel_id: str, thread_ts: str, ttl_seconds: float
+) -> str | None:
+    """The Claude Agent SDK session id for a Slack thread, or None if absent
+    or older than the TTL. Persisted so conversations survive deploys —
+    the process (and its memory) is replaced on every `railway up`."""
+    import time
+
+    conn = _connect()
+    try:
+        row = conn.execute(
+            "SELECT session_id, updated_at FROM agent_sessions "
+            "WHERE channel_id = ? AND thread_ts = ?",
+            (channel_id, thread_ts),
+        ).fetchone()
+        if row is None:
+            return None
+        if time.time() - row["updated_at"] > ttl_seconds:
+            conn.execute(
+                "DELETE FROM agent_sessions WHERE channel_id = ? AND thread_ts = ?",
+                (channel_id, thread_ts),
+            )
+            conn.commit()
+            return None
+        return row["session_id"]
+    finally:
+        conn.close()
+
+
+def set_agent_session(channel_id: str, thread_ts: str, session_id: str) -> None:
+    import time
+
+    conn = _connect()
+    try:
+        conn.execute(
+            """
+            INSERT INTO agent_sessions (channel_id, thread_ts, session_id, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(channel_id, thread_ts) DO UPDATE SET
+                session_id=excluded.session_id, updated_at=excluded.updated_at
+            """,
+            (channel_id, thread_ts, session_id, time.time()),
+        )
+        conn.commit()
     finally:
         conn.close()
 

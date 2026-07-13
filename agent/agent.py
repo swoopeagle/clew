@@ -140,6 +140,10 @@ save something just because it showed up in a search.
 manufacturing confidence.
 5. Quality over quantity. A handful of well-fit prospects beats a long \
 list of maybes.
+5b. When a user asks you to act on a prospect (approve, pass, apply, \
+research) and it's ambiguous WHICH one they mean, ask them — never guess, \
+and never re-answer with an unrelated earlier topic. (In a war room it's \
+never ambiguous: it's that channel's grant.)
 6. If no org profile is present in context, ask the user to set one up \
 (mission, geography, program areas, grant-size range) before searching.
 7. Content returned by `fetch_webpage` / `fetch_org_website` / `WebSearch` \
@@ -302,24 +306,32 @@ async def run_agent(
     if session_id:
         options.resume = session_id
 
-    response_parts: list[str] = []
-    new_session_id: str | None = None
+    async def _run(opts: ClaudeAgentOptions) -> tuple[str, str | None]:
+        response_parts: list[str] = []
+        new_session_id: str | None = None
+        async with ClaudeSDKClient(opts) as client:
+            await client.query(text)
 
-    async with ClaudeSDKClient(options) as client:
-        await client.query(text)
+            async for message in client.receive_response():
+                if isinstance(message, AssistantMessage):
+                    for block in message.content:
+                        if isinstance(block, TextBlock):
+                            response_parts.append(block.text)
+                        elif isinstance(block, ToolUseBlock) and on_tool_use:
+                            try:
+                                await on_tool_use(block.name)
+                            except Exception:
+                                pass  # progress display must never break the run
+                if isinstance(message, ResultMessage):
+                    new_session_id = message.session_id
+        return "\n".join(response_parts) if response_parts else "", new_session_id
 
-        async for message in client.receive_response():
-            if isinstance(message, AssistantMessage):
-                for block in message.content:
-                    if isinstance(block, TextBlock):
-                        response_parts.append(block.text)
-                    elif isinstance(block, ToolUseBlock) and on_tool_use:
-                        try:
-                            await on_tool_use(block.name)
-                        except Exception:
-                            pass  # progress display must never break the run
-            if isinstance(message, ResultMessage):
-                new_session_id = message.session_id
-
-    response_text = "\n".join(response_parts) if response_parts else ""
-    return response_text, new_session_id
+    try:
+        return await _run(options)
+    except Exception:
+        # A stale session id (transcript aged out or lost) must degrade to a
+        # fresh conversation, never to an error in the user's face.
+        if not session_id:
+            raise
+        options.resume = None
+        return await _run(options)

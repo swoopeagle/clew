@@ -342,3 +342,27 @@ def test_impact_block_computes_from_board():
     assert "~8 hours" in text  # 3 * 2.5 rounded
 
     assert _impact_block({"qualified": []}, total_tasks=0) is None
+
+
+def test_cfemail_decode_and_extraction():
+    from agent.tools.website import _decode_cfemail, _extract_text
+
+    email = "grants@bobwoodrufffoundation.org"
+    key = 0x42
+    encoded = bytes([key] + [b ^ key for b in email.encode()]).hex()
+
+    assert _decode_cfemail(encoded) == email
+    assert _decode_cfemail("zz-not-hex") is None
+
+    html = f"""
+    <html><body>
+      <p>Contact:
+        <a href="/cdn-cgi/l/email-protection" class="__cf_email__"
+           data-cfemail="{encoded}">[email&#160;protected]</a>
+      </p>
+    </body></html>
+    """
+    _t, _d, text, links = _extract_text(html, "https://example.org/")
+    assert email in text
+    assert f"mailto:{email}" in "\n".join(links)
+    assert "email-protection" not in "\n".join(links)

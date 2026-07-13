@@ -21,7 +21,10 @@ RUN pip install --no-cache-dir -e .
 # fixing volume ownership.
 RUN useradd -m -u 1000 clew && mkdir -p /app/data && chown -R clew:clew /app
 
-ENV PYTHONUNBUFFERED=1 HOME=/home/clew
+# CLAUDE_CONFIG_DIR on the volume: the agent CLI writes session transcripts
+# under its config dir — on the ephemeral FS they vanish every deploy,
+# breaking resume=session_id mid-conversation.
+ENV PYTHONUNBUFFERED=1 HOME=/home/clew CLAUDE_CONFIG_DIR=/app/data/claude-home
 
 RUN chmod +x /app/entrypoint.sh
 

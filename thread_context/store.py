@@ -1,62 +1,41 @@
-import threading
-import time
-
-
 class SessionStore:
-    """Thread-safe in-memory session ID store.
+    """Session ID store, persisted to SQLite (the Railway volume).
 
     Stores Claude Agent SDK session IDs keyed by (channel_id, thread_ts).
-    The SDK manages conversation history server-side via sessions, so we
-    only need to track session IDs for resuming conversations.
-    Includes TTL-based cleanup and a maximum entry limit.
+    The SDK manages conversation history via sessions, so we only track ids
+    for resuming. This used to be in-memory — which meant every deploy
+    replaced the process and amnesia'd every open conversation ("I don't
+    have a drafted profile visible in our conversation"). Rows live on the
+    same volume as the rest of the app state; a small in-process cache
+    keeps the hot path off disk.
     """
 
-    def __init__(self, ttl_seconds: int = 86400, max_entries: int = 1000):
-        self._store: dict[tuple[str, str], dict] = {}
-        self._lock = threading.Lock()
+    def __init__(self, ttl_seconds: int = 86400, max_cache: int = 1000):
         self._ttl_seconds = ttl_seconds
-        self._max_entries = max_entries
+        self._max_cache = max_cache
+        self._cache: dict[tuple[str, str], str] = {}
 
     def get_session(self, channel_id: str, thread_ts: str) -> str | None:
-        """Retrieve session ID for a thread.
-
-        Returns None if no session exists or if the session has expired.
-        """
+        """Session ID for a thread, or None if absent/expired."""
         key = (channel_id, thread_ts)
-        with self._lock:
-            entry = self._store.get(key)
-            if entry is None:
-                return None
-            if time.time() - entry["timestamp"] > self._ttl_seconds:
-                del self._store[key]
-                return None
-            return entry["session_id"]
+        cached = self._cache.get(key)
+        if cached is not None:
+            return cached
+        # Imported lazily: storage.init_db() may not have run at import time.
+        from storage import get_agent_session
+
+        session_id = get_agent_session(channel_id, thread_ts, self._ttl_seconds)
+        if session_id is not None:
+            self._remember(key, session_id)
+        return session_id
 
     def set_session(self, channel_id: str, thread_ts: str, session_id: str) -> None:
-        """Store session ID for a thread."""
-        key = (channel_id, thread_ts)
-        with self._lock:
-            self._store[key] = {
-                "session_id": session_id,
-                "timestamp": time.time(),
-            }
-            self._cleanup()
+        from storage import set_agent_session
 
-    def _cleanup(self) -> None:
-        """Remove expired entries and enforce max entry limit."""
-        now = time.time()
+        set_agent_session(channel_id, thread_ts, session_id)
+        self._remember((channel_id, thread_ts), session_id)
 
-        expired = [
-            k
-            for k, v in self._store.items()
-            if now - v["timestamp"] > self._ttl_seconds
-        ]
-        for k in expired:
-            del self._store[k]
-
-        if len(self._store) > self._max_entries:
-            sorted_keys = sorted(
-                self._store.keys(), key=lambda k: self._store[k]["timestamp"]
-            )
-            for k in sorted_keys[: len(self._store) - self._max_entries]:
-                del self._store[k]
+    def _remember(self, key: tuple[str, str], session_id: str) -> None:
+        self._cache[key] = session_id
+        while len(self._cache) > self._max_cache:
+            self._cache.pop(next(iter(self._cache)))
